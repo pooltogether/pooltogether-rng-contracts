@@ -6,13 +6,13 @@ import "../RNGInterface.sol";
 
 contract RNGBlockhashHarness is RNGInterface {
 
-  uint256 random;
+  uint256 internal random;
 
   function setRandomNumber(uint256 rando) external {
     random = rando;
   }
 
-  function requestRandomNumber(uint256, address, uint256) external override returns (uint256) {
+  function requestRandomNumber(address, uint256, uint256) external override returns (uint256) {
     return 1;
   }
 
