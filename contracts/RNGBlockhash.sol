@@ -8,6 +8,14 @@ import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
 
 import "./RNGInterface.sol";
 
+///////////////////////////////////////////////////////////
+//
+//  WARNING NOTE:
+//     "requestRandomNumber()" can be called by anyone, potentially draining our $LINK
+//     TODO: Add caller protection mechanism? Governor? redirect payment?
+//
+///////////////////////////////////////////////////////////
+
 contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   using SafeMath for uint256;
 
@@ -54,7 +62,7 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
 
   /**
     *  WARNING NOTE: This can be called by anyone, potentially draining our $LINK
-    *                Add caller protection?
+    *     TODO: Add caller protection mechanism? Governor? redirect payment?
     */
   function requestRandomNumber(address token, uint256 budget, uint256 fee) external override returns (uint256 requestId) {
     uint256 seed = uint256(blockhash(block.number));
