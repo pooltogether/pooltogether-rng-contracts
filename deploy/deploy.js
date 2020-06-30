@@ -45,6 +45,7 @@ module.exports = async (buidler) => {
   const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, Link.address])
 
   log("\n  Initializing...")
+  await RNGBlockhash.setFee(VRF.fee[network.chainId] || VRF.fee.default)
   await RNGBlockhash.setKeyhash(VRF.keyHash[network.chainId] || VRF.keyHash.default)
   await RNGBlockhash.setThreshold(VRF.threshold[network.chainId] || VRF.threshold.default)
 
