@@ -39,10 +39,6 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   {
   }
 
-  function getLinkAdress() external view returns (address) {
-    return address(LINK);
-  }
-
   function setKeyhash(bytes32 _keyhash) external onlyOwner {
     keyHash = _keyhash;
   }
