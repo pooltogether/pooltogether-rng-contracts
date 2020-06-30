@@ -13,12 +13,6 @@ const VRF = {
     3       : toBytes32(0xced103054e349b8dfb51352f0f8fa9b5d20dde3d06f9f43cb2b85bc64b238205), // ropsten
     42      : toBytes32(0x0218141742245eeeba0660e61ef8767e6ce8e7215289a4d18616828caf4dfe33), // kovan
   },
-  fee: {
-    default : toWei('1'), // 1 LINK
-    1       : toWei('1'), // 1 LINK
-    3       : toWei('1'), // 1 LINK
-    42      : toWei('1'), // 1 LINK
-  },
   threshold: {
     default : toWei('0.01'),
     1       : toWei('0.01'),
