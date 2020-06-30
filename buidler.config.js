@@ -66,16 +66,16 @@ module.exports = {
   },
   namedAccounts: {
     deployer: {
-      default: 0,  // First account in local wallet or [ropsten|kovan].accounts from above
+      default: 0,  // Local Wallet; Account 1  OR  [ropsten|kovan].accounts from above
     },
     vrfCoordinator: {
-      default: 0, // not used
+      default: 1, // Local Wallet; Account 2
       1: '', // mainnet
       3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
       42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
     },
     linkToken: {
-      default: 0, // not used
+      default: 0, // not used; Link token gets deployed on local
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet
       3: '0x20fE562d797A42Dcb3399062AE9546cd06f63280', // ropsten
       42: '0xa36085F69e2889c224210F603D836748e7dC0088', // kovan
