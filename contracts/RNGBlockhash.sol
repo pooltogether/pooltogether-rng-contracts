@@ -4,6 +4,7 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
+// import "./external/chainlink/IVRFCoordinator.sol";
 
 import "./RNGInterface.sol";
 
