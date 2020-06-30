@@ -4,7 +4,6 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
-// import "./external/chainlink/IVRFCoordinator.sol";
 
 import "./RNGInterface.sol";
 
@@ -19,18 +18,24 @@ import "./RNGInterface.sol";
 contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   using SafeMath for uint256;
 
-  uint8 constant internal REQ_STATE_INCOMPLETE = 1;
-  uint8 constant internal REQ_STATE_COMPLETE   = 2;
-  uint8 constant internal REQ_TYPE_INTERNAL    = 4;
-  uint8 constant internal REQ_TYPE_CHAINLINK   = 8;
+  enum RngRequestType {
+    INTERNAL,
+    CHAINLINK
+  }
+
+  struct RngRequest {
+    bool isComplete;
+    RngRequestType rngType;
+  }
 
   bytes32 internal keyHash;
   uint256 internal threshold;
-  uint256 public requestCount;
+  uint256 internal fee;
+  uint256 internal requestCount;
 
   //    RequestID => Value
   mapping(uint256 => uint256) public randomNumbers;
-  mapping(uint256 => uint8) public requestState;
+  mapping(uint256 => RngRequest) public requestState;
 
   //  ChainlinkID => RequestID
   mapping(bytes32 => uint256) public chainlinkRequestIds;
@@ -51,6 +56,10 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     keyHash = _keyhash;
   }
 
+  function setFee(uint256 _fee) external onlyOwner {
+    fee = _fee;
+  }
+
   function setThreshold(uint256 _threshold) external onlyOwner {
     threshold = _threshold;
   }
@@ -64,14 +73,12 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     *  WARNING NOTE: This can be called by anyone, potentially draining our $LINK
     *     TODO: Add caller protection mechanism? Governor? redirect payment?
     */
-  function requestRandomNumber(address token, uint256 budget, uint256 fee) external override returns (uint256 requestId) {
-    uint256 seed = uint256(blockhash(block.number));
-
-    // uint256 fee = IVRFCoordinator(vrfCoordinator).serviceAgreements(keyHash).fee;
+  function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint256 requestId) {
+    uint256 seed = _getSeed();
 
     // Using Chainlink VRF
     if (budget >= threshold && LINK.balanceOf(address(this)) >= fee) {
-      requestId = _requestRandomness(seed, fee);
+      requestId = _requestRandomness(seed);
     }
 
     // Using blockhash
@@ -82,11 +89,11 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     emit RandomNumberRequested(requestId, msg.sender, token, budget);
   }
 
-  function isRequestComplete(uint256 requestId) external override view returns (bool isCompleted) {
-    return requestState[requestId] & REQ_STATE_COMPLETE == REQ_STATE_COMPLETE;
+  function isRequestComplete(uint256 requestId) external virtual override view returns (bool isCompleted) {
+    return requestState[requestId].isComplete;
   }
 
-  function randomNumber(uint256 requestId) external override view returns (uint256 randomNum) {
+  function randomNumber(uint256 requestId) external virtual override view returns (uint256 randomNum) {
     return randomNumbers[requestId];
   }
 
@@ -99,18 +106,18 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     requestId = _getNextRequestId();
 
     // Track type/state of request
-    requestState[requestId] = REQ_TYPE_INTERNAL | REQ_STATE_INCOMPLETE;
+    requestState[requestId].rngType = RngRequestType.CHAINLINK;
 
     // Complete request
     _storeResult(requestId, seed);
   }
 
-  function _requestRandomness(uint256 seed, uint256 fee) internal returns (uint256 requestId) {
+  function _requestRandomness(uint256 seed) internal returns (uint256 requestId) {
     // Get next request ID
     requestId = _getNextRequestId();
 
     // Track type/state of request
-    requestState[requestId] = REQ_TYPE_CHAINLINK | REQ_STATE_INCOMPLETE;
+    requestState[requestId].rngType = RngRequestType.INTERNAL;
 
     // Complete request
     bytes32 vrfRequestId = requestRandomness(keyHash, fee, seed);
@@ -132,12 +139,16 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     requestId = requestCount;
   }
 
+  function _getSeed() internal virtual view returns (uint256 seed) {
+    return uint256(blockhash(block.number - 1));
+  }
+
   function _storeResult(uint256 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
 
     // Update state of request
-    requestState[requestId] = (requestState[requestId] | REQ_STATE_COMPLETE) ^ REQ_STATE_INCOMPLETE;
+    requestState[requestId].isComplete = true;
 
     emit RandomNumberCompleted(requestId, result);
   }

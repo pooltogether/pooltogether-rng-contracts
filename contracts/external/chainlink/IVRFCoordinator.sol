@@ -8,5 +8,5 @@ interface IVRFCoordinator {
     uint256 fee; // Minimum payment for oracle response
   }
 
-  function serviceAgreements(bytes32) external returns (ServiceAgreement memory);
+  function serviceAgreements(bytes32) external view returns (ServiceAgreement memory);
 }

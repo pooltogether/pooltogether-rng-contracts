@@ -2,25 +2,27 @@
 
 pragma solidity ^0.6.6;
 
-import "../RNGInterface.sol";
+import "../RNGBlockhash.sol";
 
-contract RNGBlockhashHarness is RNGInterface {
+contract RNGBlockhashHarness is RNGBlockhash {
 
-  uint256 internal random;
-
-  function setRandomNumber(uint256 rando) external {
-    random = rando;
+  constructor(address _vrfCoordinator, address _link)
+    public
+    RNGBlockhash(_vrfCoordinator, _link)
+  {
   }
 
-  function requestRandomNumber(address, uint256, uint256) external override returns (uint256) {
-    return 1;
+  function setRandomNumber(uint256 requestId, uint256 rand) external {
+    randomNumbers[requestId] = rand;
+  }
+  function setRequestState(uint256 requestId, bool isComplete) external {
+    requestState[requestId].isComplete = isComplete;
+  }
+  function setRequestType(uint256 requestId, uint8 rngType) external {
+    requestState[requestId].rngType = RngRequestType(rngType);
   }
 
-  function isRequestComplete(uint256) external override view returns (bool) {
-    return true;
-  }
-
-  function randomNumber(uint256) external override view returns (uint256) {
-    return random;
+  function _getSeed() internal override view returns (uint256 seed) {
+    return uint256(blockhash(block.number - 2)); // -2 since unit-test is 1 mock behind
   }
 }
