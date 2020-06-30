@@ -1,7 +1,7 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.2",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
   "engines": {
