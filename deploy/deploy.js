@@ -8,17 +8,16 @@ const {
   chainName,
 } = require('../js-utils/deployHelpers')
 
+const BUIDLER_EVM_CHAIN_ID = 31337
 
-module.exports = async (bre) => {
-  const { ethers, getNamedAccounts, deployments } = bre
+module.exports = async (buidler) => {
+  const { ethers, getNamedAccounts, deployments } = buidler
   const { log } = deployments
-  const _getContract = contractManager(bre)
+  const _getContract = contractManager(buidler)
   const network = await ethers.provider.getNetwork()
-  const [ deployerWallet ] = await ethers.getSigners()
 
   // Named accounts, defined in buidler.config.js:
   const { deployer, vrfCoordinator, linkToken } = await getNamedAccounts()
-  let linkTokenAddress = linkToken;
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   log("PoolTogether RNG Service - Contract Deploy Script")
@@ -26,28 +25,28 @@ module.exports = async (bre) => {
 
   log("  Deploying to Network: ", chainName(network.chainId))
 
-  // log({isAddress: ethers.utils.isAddress(linkToken)})
-
-  if (linkToken === deployer) {
+  let Link = {address: linkToken};
+  if (network.chainId === BUIDLER_EVM_CHAIN_ID) {
     log("\n  Deploying LINK token...")
+    const [ deployerWallet ] = await ethers.getSigners()
     const linkFactory = new LinkTokenFactory(deployerWallet)
-    const link = await linkFactory.deploy();
-    linkTokenAddress = link.address;
+    Link = await linkFactory.deploy();
   }
 
   log("\n  Using Accounts:")
   log("  - Deployer:  ", deployer)
+
   log("\n  Using Contracts:")
   log("  - VRF:  ", vrfCoordinator)
-  log("  - LINK: ", linkTokenAddress)
+  log("  - LINK: ", Link.address)
   log(" ")
 
   // Deploy Contracts
-  const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, linkToken])
+  const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, Link.address])
 
   log("\n  Initializing...")
-  await RNGBlockhash.setKeyhash(VRF.keyHash[network.chainId] || VRF.keyHash.default)
   await RNGBlockhash.setFee(VRF.fee[network.chainId] || VRF.fee.default)
+  await RNGBlockhash.setKeyhash(VRF.keyHash[network.chainId] || VRF.keyHash.default)
   await RNGBlockhash.setThreshold(VRF.threshold[network.chainId] || VRF.threshold.default)
 
 

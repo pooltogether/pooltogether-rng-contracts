@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+  "settings": {
+    "solidity-va.codelens.enable": false,
+    "solidity-va.hover": false
+  }
+}

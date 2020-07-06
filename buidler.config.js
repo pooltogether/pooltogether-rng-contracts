@@ -39,6 +39,24 @@ module.exports = {
     local: {
       url: 'http://127.0.0.1:' + process.env.LOCAL_BUIDLEREVM_PORT || '8545',
       blockGasLimit: 200000000
+    },
+    kovan: {
+      url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      gasPrice: 10e9,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC,
+        initialIndex: 0,
+        count: 3,
+      }
+    },
+    ropsten: {
+      url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      gasPrice: 10e9,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC,
+        initialIndex: 0,
+        count: 3,
+      }
     }
   },
   gasReporter: {
@@ -48,20 +66,16 @@ module.exports = {
   },
   namedAccounts: {
     deployer: {
-      default: 0, // local; Account 1
-      1: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3', // mainnet
-      3: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3', // ropsten
-      42: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3', // kovan
+      default: 0,  // Local Wallet; Account 1  OR  [ropsten|kovan].accounts from above
     },
-
     vrfCoordinator: {
-      default: 10, // local; Account 11
-      1: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3', // mainnet
+      default: 1, // Local Wallet; Account 2
+      1: '', // mainnet
       3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
       42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
     },
     linkToken: {
-      default: 0,
+      default: 0, // not used; Link token gets deployed on local
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet
       3: '0x20fE562d797A42Dcb3399062AE9546cd06f63280', // ropsten
       42: '0xa36085F69e2889c224210F603D836748e7dC0088', // kovan
