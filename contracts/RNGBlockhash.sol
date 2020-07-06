@@ -69,10 +69,6 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     require(LINK.transfer(msg.sender, amount), "RNGBlockhash/transfer-failed");
   }
 
-  function isLocked(uint256 blockNumber) external override view returns (bool) {
-    return requestCount == 0 || blockNumber == 0;
-  }
-
   /**
     *  WARNING NOTE: This can be called by anyone, potentially draining our $LINK
     *     TODO: Add caller protection mechanism? Governor? redirect payment?
