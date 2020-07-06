@@ -74,6 +74,12 @@ module.exports = {
       3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
       42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
     },
+    vdfBeacon: {
+      default: 2, // Local Wallet; Account 3
+      1: '0xC405fF8406bFfBc97bc46a1Ae5ECe55112DcF8f4', // mainnet
+      3: '0x79474439753C7c70011C3b00e06e559378bAD040', // ropsten
+      42: '', // kovan
+    },
     linkToken: {
       default: 0, // not used; Link token gets deployed on local
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet

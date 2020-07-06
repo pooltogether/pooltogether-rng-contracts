@@ -9,6 +9,7 @@
     "npm": ">=6.14.4"
   },
   "scripts": {
+    "reinstall": "rm -rf node_modules/ && rm -f yarn.lock && yarn clean && yarn",
     "verify": "yarn hint && yarn test",
     "hint": "solhint \"contracts/**/*.sol\"",
     "test": "yarn clean-test && buidler test",

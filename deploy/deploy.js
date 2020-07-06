@@ -4,6 +4,7 @@
 const { LinkTokenFactory } = require('@chainlink/test-helpers/dist/src/generated/LinkTokenFactory')
 const {
   VRF,
+  VDF,
   contractManager,
   chainName,
 } = require('../js-utils/deployHelpers')
@@ -17,7 +18,7 @@ module.exports = async (buidler) => {
   const network = await ethers.provider.getNetwork()
 
   // Named accounts, defined in buidler.config.js:
-  const { deployer, vrfCoordinator, linkToken } = await getNamedAccounts()
+  const { deployer, vrfCoordinator, vdfBeacon, linkToken } = await getNamedAccounts()
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   log("PoolTogether RNG Service - Contract Deploy Script")
@@ -38,11 +39,16 @@ module.exports = async (buidler) => {
 
   log("\n  Using Contracts:")
   log("  - VRF:  ", vrfCoordinator)
+  log("  - VDF:  ", vdfBeacon)
   log("  - LINK: ", Link.address)
   log(" ")
 
   // Deploy Contracts
   const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, Link.address])
+
+  const startBlock = VDF.startBlock[network.chainId] || VDF.startBlock.default
+  const blockStep = VDF.blockStep[network.chainId] || VDF.blockStep.default
+  const RNGVeeDo = await _getContract('RNGVeeDo', [vdfBeacon, startBlock, blockStep])
 
   log("\n  Initializing...")
   await RNGBlockhash.setFee(VRF.fee[network.chainId] || VRF.fee.default)
@@ -53,6 +59,7 @@ module.exports = async (buidler) => {
   // Display Contract Addresses
   log("\n  Contract Deployments Complete!\n")
   log("  - RNGBlockhash: ", RNGBlockhash.address)
+  log("  - RNGVeeDo:     ", RNGVeeDo.address)
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 }

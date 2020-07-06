@@ -27,6 +27,21 @@ const VRF = {
   }
 }
 
+const VDF = {
+  startBlock: {
+    default : toWei('1'),
+    1       : toWei('10000000'),
+    3       : toWei('8000000'),
+    42      : toWei('18000000'),
+  },
+  blockStep: {
+    default : toWei('10'),
+    1       : toWei('300'),
+    3       : toWei('300'),
+    42      : toWei('300'),
+  }
+}
+
 const txOverrides = (options = {}) => ({gas: 20000000, ...options})
 
 const chainName = (chainId) => {
@@ -52,6 +67,7 @@ const contractManager = (buidler) => async (contractName, contractArgs = [], dep
 
 module.exports = {
   VRF,
+  VDF,
   txOverrides,
   contractManager,
   chainName,
