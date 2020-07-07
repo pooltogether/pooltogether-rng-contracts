@@ -9,28 +9,41 @@ The [PoolTogether](https://www.pooltogether.com/) Prize Savings Protocol Ethereu
 See the [API documentation](https://docs.pooltogether.com/)
 
 
+## Deployed on Kovan:
+
+- RNG: https://kovan.etherscan.io/address/0x6588fb4c8bef80c2ec8744a047cd7df4e08de996
+- Beacon: https://kovan.etherscan.io/address/0x505cc58a0c67c511333e63bf089ada16578f126d
+
 ## Development
 
 ### Install Dependencies
-$ yarn
+
+- $ yarn
 
 ### Verify Codebase (hint + test)
-$ yarn verify
+
+- $ yarn verify
 
 ### Run Static Code Analysis
-$ yarn hint
+
+- $ yarn hint
 
 ### Run Tests
-$ yarn test
+
+- $ yarn test
 
 ### Run Coverage
-$ yarn coverage
+
+- $ yarn coverage
 
 ### Run Gas Report
-$ yarn gas
+
+- $ yarn gas
 
 ### Start Local TestRPC & Deploy
-$ yarn start
+
+- $ yarn start
 
 ### Deploy to Testnet/Mainnet
-$ yarn deploy-[local|ropsten|kovan|mainnet]
+
+- $ yarn deploy-[local|ropsten|kovan|mainnet]

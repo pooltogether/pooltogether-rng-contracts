@@ -6,9 +6,9 @@ import "../RNGVeeDo.sol";
 
 contract RNGVeeDoHarness is RNGVeeDo {
 
-  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _blockStep)
+  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _pulse)
     public
-    RNGVeeDo(_vdfBeacon, _startBlock, _blockStep)
+    RNGVeeDo(_vdfBeacon, _startBlock, _pulse)
   {
   }
 

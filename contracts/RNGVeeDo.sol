@@ -15,7 +15,7 @@ contract RNGVeeDo is RNGInterface, Ownable {
   event RandomNumberReceived(address indexed sender, uint256 randomNumber, uint256 latestCycle);
 
   uint256 public startBlock;
-  uint256 public blockStep;
+  uint256 public pulse;
   uint256 public requestCount;
 
   //    RequestID => Block number of Proof
@@ -23,15 +23,15 @@ contract RNGVeeDo is RNGInterface, Ownable {
 
   IBeaconContract public vdfBeacon;
 
-  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _blockStep) public {
+  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _pulse) public {
     vdfBeacon = IBeaconContract(_vdfBeacon);
     startBlock = _startBlock;
-    blockStep = _blockStep;
+    pulse = _pulse;
   }
 
   function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint256 requestId) {
     uint256 blockCycle = _getCycleByBlock(block.number).add(1);
-    uint256 nextProofBlock = startBlock.add(blockCycle.mul(blockStep));
+    uint256 nextProofBlock = startBlock.add(blockCycle.mul(pulse));
 
     requestId = _getNextRequestId();
     proofBlockByRequestId[requestId] = nextProofBlock;
@@ -47,6 +47,14 @@ contract RNGVeeDo is RNGInterface, Ownable {
     return _getRandomByRequestId(requestId);
   }
 
+  function setStartBlock(uint256 _startBlock) external onlyOwner {
+    startBlock = _startBlock;
+  }
+
+  function setPulse(uint256 _pulse) external onlyOwner {
+    pulse = _pulse;
+  }
+
   function _getRandomByRequestId(uint256 requestId) internal view returns (uint256 randomNum) {
     uint256 proofBlock = proofBlockByRequestId[requestId];
     if (proofBlock == 0) { return 0; }
@@ -59,9 +67,9 @@ contract RNGVeeDo is RNGInterface, Ownable {
   }
 
   function _getCycleByBlock(uint256 blockNum) internal view returns (uint256 cycle) {
-    if (blockNum.sub(startBlock) < blockStep) { return 0; }
+    if (blockNum.sub(startBlock) < pulse) { return 0; }
 
-    uint256 blocksInCycle = blockNum.mod(blockStep);
-    return blockNum.sub(blocksInCycle).div(blockStep);
+    uint256 blocksInCycle = blockNum.mod(pulse);
+    return blockNum.sub(blocksInCycle).div(pulse);
   }
 }

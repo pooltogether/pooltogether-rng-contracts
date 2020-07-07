@@ -30,14 +30,14 @@ describe('RNGVeeDo contract', function() {
     beacon = await deployMockContract(users.deployer, IBeaconContract.abi, txOverrides())
 
     debug('deploying RNG...')
-    rng = await _getContract('RNGVeeDoHarness', [beacon.address, VDF.startBlock.default, VDF.blockStep.default])
+    rng = await _getContract('RNGVeeDoHarness', [beacon.address, VDF.startBlock.default, VDF.pulse.default])
   })
 
   describe('requestRandomNumber()', () => {
     it('should get a random number from the VDF', async () => {
       const requestId = ethers.constants.One
       const budget = toWei('1')
-      const proofBlock = VDF.startBlock.default + VDF.blockStep.default;
+      const proofBlock = VDF.startBlock.default + VDF.pulse.default;
       const randomNumber = toBytes32('123')
 
       await expect(rng.requestRandomNumber(TEST_TOKEN, budget))

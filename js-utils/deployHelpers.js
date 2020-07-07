@@ -34,7 +34,7 @@ const VDF = {
     3       : 8000000,
     42      : 18000000,
   },
-  blockStep: {
+  pulse: {
     default : 820,
     1       : 820,
     3       : 820,
