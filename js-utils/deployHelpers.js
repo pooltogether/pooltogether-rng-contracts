@@ -29,16 +29,16 @@ const VRF = {
 
 const VDF = {
   startBlock: {
-    default : toWei('1'),
-    1       : toWei('10000000'),
-    3       : toWei('8000000'),
-    42      : toWei('18000000'),
+    default : 1,
+    1       : 10000000,
+    3       : 8000000,
+    42      : 18000000,
   },
   blockStep: {
-    default : toWei('10'),
-    1       : toWei('300'),
-    3       : toWei('300'),
-    42      : toWei('300'),
+    default : 820,
+    1       : 820,
+    3       : 820,
+    42      : 820,
   }
 }
 
