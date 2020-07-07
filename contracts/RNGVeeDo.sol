@@ -14,9 +14,9 @@ contract RNGVeeDo is RNGInterface, Ownable {
 
   event RandomNumberReceived(address indexed sender, uint256 randomNumber, uint256 latestCycle);
 
-  uint256 internal startBlock;
-  uint256 internal blockStep;
-  uint256 internal requestCount;
+  uint256 public startBlock;
+  uint256 public blockStep;
+  uint256 public requestCount;
 
   //    RequestID => Block number of Proof
   mapping(uint256 => uint256) internal proofBlockByRequestId;

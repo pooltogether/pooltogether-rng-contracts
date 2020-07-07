@@ -78,7 +78,7 @@ module.exports = {
       default: 2, // Local Wallet; Account 3
       1: '0xC405fF8406bFfBc97bc46a1Ae5ECe55112DcF8f4', // mainnet
       3: '0x79474439753C7c70011C3b00e06e559378bAD040', // ropsten
-      42: '', // kovan
+      42: '0xc635f004087Fa5AB21873A3EB88A3c528E7c45e4', // kovan
     },
     linkToken: {
       default: 0, // not used; Link token gets deployed on local
