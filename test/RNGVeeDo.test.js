@@ -30,21 +30,21 @@ describe('RNGVeeDo contract', function() {
     beacon = await deployMockContract(users.deployer, IBeaconContract.abi, txOverrides())
 
     debug('deploying RNG...')
-    rng = await _getContract('RNGVeeDoHarness', [beacon.address, VDF.startBlock.default, VDF.pulse.default])
+    rng = await _getContract('RNGVeeDoHarness', [beacon.address, VDF.pulse.default])
   })
 
   describe('requestRandomNumber()', () => {
     it('should get a random number from the VDF', async () => {
       const requestId = ethers.constants.One
       const budget = toWei('1')
-      const proofBlock = VDF.startBlock.default + VDF.pulse.default;
+      const lockBlock = VDF.pulse.default;
       const randomNumber = toBytes32('123')
 
       await expect(rng.requestRandomNumber(TEST_TOKEN, budget))
         .to.emit(rng, 'RandomNumberRequested')
         .withArgs(requestId, users.deployer._address, TEST_TOKEN, budget)
 
-      await beacon.mock.getRandomness.withArgs(proofBlock).returns(randomNumber)
+      await beacon.mock.getRandomness.withArgs(lockBlock).returns(randomNumber)
       expect(await rng.randomNumber(requestId)).to.equal(randomNumber)
     })
   })
@@ -52,13 +52,13 @@ describe('RNGVeeDo contract', function() {
   describe('isRequestComplete()', () => {
     it('should check a request by ID and confirm if it is complete or not', async () => {
       const requestId = ethers.constants.One
-      const proofBlock = ethers.constants.Two
+      const lockBlock = ethers.constants.Two
       const randomNumber = toBytes32('123')
 
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
 
-      await rng.setProofBlockByRequestIdForTest(requestId, proofBlock)
-      await beacon.mock.getRandomness.withArgs(proofBlock).returns(randomNumber)
+      await rng.setLockBlockByRequestIdForTest(requestId, lockBlock)
+      await beacon.mock.getRandomness.withArgs(lockBlock).returns(randomNumber)
 
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
     })
@@ -67,11 +67,11 @@ describe('RNGVeeDo contract', function() {
   describe('randomNumber()', () => {
     it('should return a previous random number by request ID', async () => {
       const requestId = ethers.constants.One
-      const proofBlock = ethers.constants.Two
+      const lockBlock = ethers.constants.Two
       const randomNumber = toBytes32('123')
 
-      await rng.setProofBlockByRequestIdForTest(requestId, proofBlock)
-      await beacon.mock.getRandomness.withArgs(proofBlock).returns(randomNumber)
+      await rng.setLockBlockByRequestIdForTest(requestId, lockBlock)
+      await beacon.mock.getRandomness.withArgs(lockBlock).returns(randomNumber)
 
       expect(await rng.randomNumber(requestId)).to.equal(randomNumber)
     })

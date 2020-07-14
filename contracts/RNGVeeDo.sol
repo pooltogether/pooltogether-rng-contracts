@@ -4,6 +4,7 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/SafeCast.sol";
 
 import "./external/starkware/IBeaconContract.sol";
 
@@ -11,63 +12,58 @@ import "./RNGInterface.sol";
 
 contract RNGVeeDo is RNGInterface, Ownable {
   using SafeMath for uint256;
+  using SafeCast for uint256;
 
   event RandomNumberReceived(address indexed sender, uint256 randomNumber, uint256 latestCycle);
 
-  uint256 public startBlock;
-  uint256 public pulse;
-  uint256 public requestCount;
+  uint32 public pulse;
+  uint32 public requestCount;
 
-  //    RequestID => Block number of Proof
-  mapping(uint256 => uint256) internal proofBlockByRequestId;
+  //    RequestID => Block number to Lock at
+  mapping(uint32 => uint32) internal lockBlockByRequestId;
 
   IBeaconContract public vdfBeacon;
 
-  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _pulse) public {
+  constructor(address _vdfBeacon, uint32 _pulse) public {
     vdfBeacon = IBeaconContract(_vdfBeacon);
-    startBlock = _startBlock;
     pulse = _pulse;
   }
 
-  function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint256 requestId) {
+  function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint32 requestId, uint32 lockBlock) {
     uint256 blockCycle = _getCycleByBlock(block.number).add(1);
-    uint256 nextProofBlock = startBlock.add(blockCycle.mul(pulse));
+    lockBlock = blockCycle.mul(uint256(pulse)).toUint32();
 
     requestId = _getNextRequestId();
-    proofBlockByRequestId[requestId] = nextProofBlock;
+    lockBlockByRequestId[requestId] = lockBlock;
 
     emit RandomNumberRequested(requestId, msg.sender, token, budget);
   }
 
-  function isRequestComplete(uint256 requestId) external virtual override view returns (bool isCompleted) {
+  function isRequestComplete(uint32 requestId) external virtual override view returns (bool isCompleted) {
     return _getRandomByRequestId(requestId) > 0;
   }
 
-  function randomNumber(uint256 requestId) external virtual override view returns (uint256 randomNum) {
+  function randomNumber(uint32 requestId) external virtual override view returns (uint256 randomNum) {
     return _getRandomByRequestId(requestId);
   }
 
-  function setStartBlock(uint256 _startBlock) external onlyOwner {
-    startBlock = _startBlock;
-  }
-
-  function setPulse(uint256 _pulse) external onlyOwner {
+  function setPulse(uint32 _pulse) external onlyOwner {
     pulse = _pulse;
   }
 
-  function _getRandomByRequestId(uint256 requestId) internal view returns (uint256 randomNum) {
-    uint256 proofBlock = proofBlockByRequestId[requestId];
-    if (proofBlock == 0) { return 0; }
-    return uint256(vdfBeacon.getRandomness(proofBlock));
+  function _getRandomByRequestId(uint32 requestId) internal view returns (uint256 randomNum) {
+    uint256 lockBlock = lockBlockByRequestId[requestId];
+    if (lockBlock == 0) { return 0; }
+    return uint256(vdfBeacon.getRandomness(lockBlock));
   }
 
-  function _getNextRequestId() internal returns (uint256 requestId) {
-    requestCount = requestCount.add(1);
+  function _getNextRequestId() internal returns (uint32 requestId) {
+    requestCount = uint256(requestCount).add(1).toUint32();
     requestId = requestCount;
   }
 
   function _getCycleByBlock(uint256 blockNum) internal view returns (uint256 cycle) {
-    if (blockNum.sub(startBlock) < pulse) { return 0; }
+    if (blockNum < pulse) { return 0; }
 
     uint256 blocksInCycle = blockNum.mod(pulse);
     return blockNum.sub(blocksInCycle).div(pulse);

@@ -28,12 +28,6 @@ const VRF = {
 }
 
 const VDF = {
-  startBlock: {
-    default : 1,
-    1       : 10000000,
-    3       : 8000000,
-    42      : 18000000,
-  },
   pulse: {
     default : 820,
     1       : 820,

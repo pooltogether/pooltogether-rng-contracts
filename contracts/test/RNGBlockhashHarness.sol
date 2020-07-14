@@ -12,13 +12,13 @@ contract RNGBlockhashHarness is RNGBlockhash {
   {
   }
 
-  function setRandomNumber(uint256 requestId, uint256 rand) external {
+  function setRandomNumber(uint32 requestId, uint256 rand) external {
     randomNumbers[requestId] = rand;
   }
-  function setRequestState(uint256 requestId, bool isComplete) external {
+  function setRequestState(uint32 requestId, bool isComplete) external {
     requestState[requestId].isComplete = isComplete;
   }
-  function setRequestType(uint256 requestId, uint8 rngType) external {
+  function setRequestType(uint32 requestId, uint8 rngType) external {
     requestState[requestId].rngType = RngRequestType(rngType);
   }
 

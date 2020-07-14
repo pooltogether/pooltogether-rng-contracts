@@ -6,13 +6,13 @@ import "../RNGVeeDo.sol";
 
 contract RNGVeeDoHarness is RNGVeeDo {
 
-  constructor(address _vdfBeacon, uint256 _startBlock, uint256 _pulse)
+  constructor(address _vdfBeacon, uint32 _pulse)
     public
-    RNGVeeDo(_vdfBeacon, _startBlock, _pulse)
+    RNGVeeDo(_vdfBeacon, _pulse)
   {
   }
 
-  function setProofBlockByRequestIdForTest(uint256 requestId, uint256 proofBlock) external {
-    proofBlockByRequestId[requestId] = proofBlock;
+  function setLockBlockByRequestIdForTest(uint32 requestId, uint32 lockBlock) external {
+    lockBlockByRequestId[requestId] = lockBlock;
   }
 }

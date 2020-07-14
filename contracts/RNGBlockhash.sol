@@ -3,6 +3,7 @@
 pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/SafeCast.sol";
 import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
 
 import "./RNGInterface.sol";
@@ -17,6 +18,7 @@ import "./RNGInterface.sol";
 
 contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   using SafeMath for uint256;
+  using SafeCast for uint256;
 
   enum RngRequestType {
     INTERNAL,
@@ -31,14 +33,14 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   bytes32 internal keyHash;
   uint256 internal threshold;
   uint256 internal fee;
-  uint256 internal requestCount;
+  uint32 internal requestCount;
 
   //    RequestID => Value
-  mapping(uint256 => uint256) public randomNumbers;
-  mapping(uint256 => RngRequest) public requestState;
+  mapping(uint32 => uint256) public randomNumbers;
+  mapping(uint32 => RngRequest) public requestState;
 
   //  ChainlinkID => RequestID
-  mapping(bytes32 => uint256) public chainlinkRequestIds;
+  mapping(bytes32 => uint32) public chainlinkRequestIds;
 
 
   modifier onlyVRFCoordinator {
@@ -73,8 +75,9 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     *  WARNING NOTE: This can be called by anyone, potentially draining our $LINK
     *     TODO: Add caller protection mechanism? Governor? redirect payment?
     */
-  function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint256 requestId) {
+  function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint32 requestId, uint32 lockBlock) {
     uint256 seed = _getSeed();
+    lockBlock = uint32(block.number);
 
     // Using Chainlink VRF
     if (budget >= threshold && LINK.balanceOf(address(this)) >= fee) {
@@ -89,11 +92,11 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     emit RandomNumberRequested(requestId, msg.sender, token, budget);
   }
 
-  function isRequestComplete(uint256 requestId) external virtual override view returns (bool isCompleted) {
+  function isRequestComplete(uint32 requestId) external virtual override view returns (bool isCompleted) {
     return requestState[requestId].isComplete;
   }
 
-  function randomNumber(uint256 requestId) external virtual override view returns (uint256 randomNum) {
+  function randomNumber(uint32 requestId) external virtual override view returns (uint256 randomNum) {
     return randomNumbers[requestId];
   }
 
@@ -101,7 +104,7 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   // Internal and/or VRF-specific
   //
 
-  function _generateRandomness(uint256 seed) internal returns (uint256 requestId) {
+  function _generateRandomness(uint256 seed) internal returns (uint32 requestId) {
     // Get next request ID
     requestId = _getNextRequestId();
 
@@ -112,7 +115,7 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     _storeResult(requestId, seed);
   }
 
-  function _requestRandomness(uint256 seed) internal returns (uint256 requestId) {
+  function _requestRandomness(uint256 seed) internal returns (uint32 requestId) {
     // Get next request ID
     requestId = _getNextRequestId();
 
@@ -130,12 +133,12 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     * @dev The VRF Coordinator will not pass randomness that could not be verified.
     */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) external override onlyVRFCoordinator {
-    uint256 internalRequestId = chainlinkRequestIds[requestId];
+    uint32 internalRequestId = chainlinkRequestIds[requestId];
     _storeResult(internalRequestId, randomness.mod(20).add(1));
   }
 
-  function _getNextRequestId() internal returns (uint256 requestId) {
-    requestCount = requestCount.add(1);
+  function _getNextRequestId() internal returns (uint32 requestId) {
+    requestCount = uint256(requestCount).add(1).toUint32();
     requestId = requestCount;
   }
 
@@ -143,7 +146,7 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
     return uint256(blockhash(block.number - 1));
   }
 
-  function _storeResult(uint256 requestId, uint256 result) internal {
+  function _storeResult(uint32 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
 
