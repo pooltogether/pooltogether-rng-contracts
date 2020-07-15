@@ -15,7 +15,7 @@ const {
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
 const _getContract = contractManager(buidler)
 
-const debug = require('debug')('ptv3:RNG.test')
+const debug = require('debug')('ptv3:RNGBlockhash.test')
 
 
 describe('RNGBlockhash contract', function() {

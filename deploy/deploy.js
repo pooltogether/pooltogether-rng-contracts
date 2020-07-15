@@ -4,10 +4,12 @@
 const { LinkTokenFactory } = require('@chainlink/test-helpers/dist/src/generated/LinkTokenFactory')
 const {
   VRF,
+  VDF,
   contractManager,
   chainName,
 } = require('../js-utils/deployHelpers')
 
+const KOVAN_CHAIN_ID = 42
 const BUIDLER_EVM_CHAIN_ID = 31337
 
 module.exports = async (buidler) => {
@@ -17,7 +19,8 @@ module.exports = async (buidler) => {
   const network = await ethers.provider.getNetwork()
 
   // Named accounts, defined in buidler.config.js:
-  const { deployer, vrfCoordinator, linkToken } = await getNamedAccounts()
+  const { deployer, vrfCoordinator, vdfBeacon, linkToken } = await getNamedAccounts()
+  const [ deployerWallet ] = await ethers.getSigners()
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
   log("PoolTogether RNG Service - Contract Deploy Script")
@@ -26,11 +29,15 @@ module.exports = async (buidler) => {
   log("  Deploying to Network: ", chainName(network.chainId))
 
   let Link = {address: linkToken};
+  let Beacon = {address: vdfBeacon};
   if (network.chainId === BUIDLER_EVM_CHAIN_ID) {
     log("\n  Deploying LINK token...")
-    const [ deployerWallet ] = await ethers.getSigners()
     const linkFactory = new LinkTokenFactory(deployerWallet)
     Link = await linkFactory.deploy();
+  }
+  if (network.chainId === BUIDLER_EVM_CHAIN_ID) { // || network.chainId === KOVAN_CHAIN_ID) {
+    log("\n  Deploying VDF Beacon contract...")
+    Beacon = await _getContract('BeaconContract')
   }
 
   log("\n  Using Accounts:")
@@ -38,11 +45,16 @@ module.exports = async (buidler) => {
 
   log("\n  Using Contracts:")
   log("  - VRF:  ", vrfCoordinator)
+  log("  - VDF:  ", Beacon.address)
   log("  - LINK: ", Link.address)
   log(" ")
 
   // Deploy Contracts
   const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, Link.address])
+
+  const startBlock = VDF.startBlock[network.chainId] || VDF.startBlock.default
+  const pulse = VDF.pulse[network.chainId] || VDF.pulse.default
+  const RNGVeeDo = await _getContract('RNGVeeDo', [Beacon.address, startBlock, pulse])
 
   log("\n  Initializing...")
   await RNGBlockhash.setFee(VRF.fee[network.chainId] || VRF.fee.default)
@@ -53,6 +65,7 @@ module.exports = async (buidler) => {
   // Display Contract Addresses
   log("\n  Contract Deployments Complete!\n")
   log("  - RNGBlockhash: ", RNGBlockhash.address)
+  log("  - RNGVeeDo:     ", RNGVeeDo.address)
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 }
