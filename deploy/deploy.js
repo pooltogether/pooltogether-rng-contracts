@@ -52,9 +52,8 @@ module.exports = async (buidler) => {
   // Deploy Contracts
   const RNGBlockhash = await _getContract('RNGBlockhash', [vrfCoordinator, Link.address])
 
-  const startBlock = VDF.startBlock[network.chainId] || VDF.startBlock.default
   const pulse = VDF.pulse[network.chainId] || VDF.pulse.default
-  const RNGVeeDo = await _getContract('RNGVeeDo', [Beacon.address, startBlock, pulse])
+  const RNGVeeDo = await _getContract('RNGVeeDo', [Beacon.address, pulse])
 
   log("\n  Initializing...")
   await RNGBlockhash.setFee(VRF.fee[network.chainId] || VRF.fee.default)
