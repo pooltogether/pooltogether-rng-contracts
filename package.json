@@ -1,7 +1,7 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "3.0.0-alpha.3",
+  "version": "3.0.0-alpha.4",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
   "main": "index.js",
@@ -22,8 +22,7 @@
     "prepack": "rm -rf build cache && buidler compile",
     "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@chainlink/contracts": "^0.0.5",
     "@chainlink/test-helpers": "^0.0.4",
