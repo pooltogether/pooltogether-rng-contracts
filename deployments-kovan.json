@@ -2,7 +2,7 @@
   "chainId": "42",
   "contracts": {
     "BeaconContract": {
-      "address": "0xc635f004087Fa5AB21873A3EB88A3c528E7c45e4",
+      "address": "0xAF4be1011af30a7D77bf74Dee1a719186F1E4EB3",
       "abi": [
         {
           "inputs": [],
@@ -70,24 +70,6 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
-              "name": "blockNumber",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "randomNumber",
-              "type": "uint256"
-            }
-          ],
-          "name": "setRandomness",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
               "internalType": "address",
               "name": "newOwner",
               "type": "address"
@@ -101,7 +83,7 @@
       ]
     },
     "RNGBlockhash": {
-      "address": "0x5b134b8ACf84D7235cEa84EBbd81C95c7BA2E9E4",
+      "address": "0x30dA4E373D3935484720AbDf157A2A1E15afE4Ad",
       "abi": [
         {
           "inputs": [
@@ -143,9 +125,9 @@
           "inputs": [
             {
               "indexed": true,
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "id",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "indexed": false,
@@ -162,9 +144,9 @@
           "inputs": [
             {
               "indexed": true,
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "id",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "indexed": true,
@@ -199,9 +181,9 @@
           "name": "chainlinkRequestIds",
           "outputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "stateMutability": "view",
@@ -228,9 +210,9 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "isRequestComplete",
@@ -279,9 +261,9 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "randomNumber",
@@ -298,9 +280,9 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "randomNumbers",
@@ -337,9 +319,14 @@
           "name": "requestRandomNumber",
           "outputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "lockBlock",
+              "type": "uint32"
             }
           ],
           "stateMutability": "nonpayable",
@@ -377,9 +364,9 @@
         {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "requestState",
@@ -466,7 +453,7 @@
       ]
     },
     "RNGVeeDo": {
-      "address": "0x6EC8fac91bC73534e585c85d39D5B233967F9335",
+      "address": "0x9843BE095a3B8cAF41D4B2266b5489B08ED902b0",
       "abi": [
         {
           "inputs": [
@@ -476,14 +463,9 @@
               "type": "address"
             },
             {
-              "internalType": "uint256",
-              "name": "_startBlock",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "_blockStep",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "_pulse",
+              "type": "uint32"
             }
           ],
           "stateMutability": "nonpayable",
@@ -513,9 +495,9 @@
           "inputs": [
             {
               "indexed": true,
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "id",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "indexed": false,
@@ -557,9 +539,9 @@
           "inputs": [
             {
               "indexed": true,
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "id",
-              "type": "uint256"
+              "type": "uint32"
             },
             {
               "indexed": true,
@@ -584,24 +566,11 @@
           "type": "event"
         },
         {
-          "inputs": [],
-          "name": "blockStep",
-          "outputs": [
-            {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "isRequestComplete",
@@ -629,11 +598,24 @@
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "pulse",
+          "outputs": [
+            {
+              "internalType": "uint32",
+              "name": "",
+              "type": "uint32"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "name": "randomNumber",
@@ -659,9 +641,9 @@
           "name": "requestCount",
           "outputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "",
-              "type": "uint256"
+              "type": "uint32"
             }
           ],
           "stateMutability": "view",
@@ -683,25 +665,30 @@
           "name": "requestRandomNumber",
           "outputs": [
             {
-              "internalType": "uint256",
+              "internalType": "uint32",
               "name": "requestId",
-              "type": "uint256"
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "lockBlock",
+              "type": "uint32"
             }
           ],
           "stateMutability": "nonpayable",
           "type": "function"
         },
         {
-          "inputs": [],
-          "name": "startBlock",
-          "outputs": [
+          "inputs": [
             {
-              "internalType": "uint256",
-              "name": "",
-              "type": "uint256"
+              "internalType": "uint32",
+              "name": "_pulse",
+              "type": "uint32"
             }
           ],
-          "stateMutability": "view",
+          "name": "setPulse",
+          "outputs": [],
+          "stateMutability": "nonpayable",
           "type": "function"
         },
         {

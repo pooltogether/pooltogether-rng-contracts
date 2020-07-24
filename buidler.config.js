@@ -76,8 +76,8 @@ module.exports = {
     vdfBeacon: {
       default: 2, // Local Wallet; Account 3
       1: '0xC405fF8406bFfBc97bc46a1Ae5ECe55112DcF8f4', // mainnet
-      3: '0x79474439753C7c70011C3b00e06e559378bAD040', // ropsten
-      42: '0x505cc58A0c67C511333E63bf089AdA16578F126D', // kovan
+      3: '0xfd480d2b719e28B3B76c8e06B66BA774703628BA', // ropsten (Mocked Beacon)
+      42: '0xAF4be1011af30a7D77bf74Dee1a719186F1E4EB3', // kovan (Mocked Beacon)
     },
     linkToken: {
       default: 0, // not used; Link token gets deployed on local
