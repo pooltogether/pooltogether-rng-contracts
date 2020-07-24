@@ -1,13 +1,10 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "3.0.0-alpha.3",
+  "version": "3.0.0-alpha.4",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
-  "engines": {
-    "node": ">=12.16.1",
-    "npm": ">=6.14.4"
-  },
+  "main": "index.js",
   "scripts": {
     "reinstall": "rm -rf node_modules/ && rm -f yarn.lock && yarn clean && yarn",
     "verify": "yarn hint && yarn test",
@@ -21,10 +18,11 @@
     "deploy-kovan": "buidler deploy --network kovan --export ./deployments-kovan.json",
     "deploy-ropsten": "buidler deploy --network ropsten --export ./deployments-ropsten.json",
     "clean": "rm -rf build cache",
-    "clean-test": "rm -rf deployments/buidlerevm_31337 test-results.xml"
+    "clean-test": "rm -rf deployments/buidlerevm_31337 test-results.xml",
+    "prepack": "rm -rf build cache && buidler compile",
+    "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@chainlink/contracts": "^0.0.5",
     "@chainlink/test-helpers": "^0.0.4",
