@@ -12,6 +12,7 @@
       "function-max-lines": "warn",
       "max-line-length": ["warn", 160],
       "avoid-suicide": "error",
-      "avoid-sha3": "warn"
+      "avoid-sha3": "warn",
+      "reason-string": ["warn", {"maxLength": 48}]
   }
 }
