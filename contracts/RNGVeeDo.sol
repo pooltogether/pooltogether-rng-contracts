@@ -30,6 +30,10 @@ contract RNGVeeDo is RNGInterface, Ownable {
   }
 
   function requestRandomNumber(address token, uint256 budget) external virtual override returns (uint32 requestId, uint32 lockBlock) {
+    uint32 lastRequestId = uint256(requestCount).toUint32();
+    uint256 lastLockBlock = lockBlockByRequestId[lastRequestId];
+    require(block.number > lastLockBlock, "RNGVeeDo/request-in-flight");
+
     uint256 blockCycle = _getCycleByBlock(block.number).add(1);
     lockBlock = blockCycle.mul(uint256(pulse)).toUint32();
 

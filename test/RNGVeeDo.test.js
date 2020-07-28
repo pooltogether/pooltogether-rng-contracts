@@ -47,6 +47,20 @@ describe('RNGVeeDo contract', function() {
       await beacon.mock.getRandomness.withArgs(lockBlock).returns(randomNumber)
       expect(await rng.randomNumber(requestId)).to.equal(randomNumber)
     })
+
+    it('should prevent new requests while in-flight', async () => {
+      const requestId = ethers.constants.One
+      const budget = toWei('1')
+      const lockBlock = VDF.pulse.default;
+      const randomNumber = toBytes32('123')
+
+      await expect(rng.requestRandomNumber(TEST_TOKEN, budget))
+        .to.emit(rng, 'RandomNumberRequested')
+        .withArgs(requestId, users.deployer._address, TEST_TOKEN, budget)
+
+      await expect(rng.requestRandomNumber(TEST_TOKEN, budget))
+        .to.be.revertedWith('RNGVeeDo/request-in-flight')
+    })
   })
 
   describe('isRequestComplete()', () => {

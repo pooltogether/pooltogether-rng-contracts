@@ -14,6 +14,7 @@ contract BeaconContract is Ownable, IBeaconContract {
       view
       returns (bytes32)
   {
-      return blockhash(blockNumber);
+      blockNumber; // silence warnings
+      return blockhash(block.number - 1);
   }
 }
