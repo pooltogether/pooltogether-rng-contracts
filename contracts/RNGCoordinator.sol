@@ -79,7 +79,7 @@ contract RNGCoordinator is RNGInterface, Ownable {
   /// @return True if the request has completed and a random number is available, false otherwise
   function isRequestComplete(uint32 requestId) external override view returns (bool) {
     uint256 serviceIndex = _lookupServiceByRequestId(requestId);
-    RngServiceLookup memory rng = rngServices[serviceIndex];
+    RngServiceLookup storage rng = rngServices[serviceIndex];
     uint32 offsetRequestId = uint256(requestId).sub(rng.offsetRequestId).toUint32();
     return RNGInterface(rng.service).isRequestComplete(offsetRequestId);
   }
@@ -89,7 +89,7 @@ contract RNGCoordinator is RNGInterface, Ownable {
   /// @return The random number
   function randomNumber(uint32 requestId) external override view returns (uint256) {
     uint256 serviceIndex = _lookupServiceByRequestId(requestId);
-    RngServiceLookup memory rng = rngServices[serviceIndex];
+    RngServiceLookup storage rng = rngServices[serviceIndex];
     uint32 offsetRequestId = uint256(requestId).sub(rng.offsetRequestId).toUint32();
     return RNGInterface(rng.service).randomNumber(offsetRequestId);
   }
