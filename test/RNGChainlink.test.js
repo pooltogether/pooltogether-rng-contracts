@@ -15,10 +15,10 @@ const {
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
 const _getContract = contractManager(buidler)
 
-const debug = require('debug')('ptv3:RNGBlockhash.test')
+const debug = require('debug')('ptv3:RNGChainlink.test')
 
 
-describe('RNGBlockhash contract', function() {
+describe('RNGChainlink contract', function() {
   let users, rng, link
 
   beforeEach(async () => {
@@ -28,7 +28,7 @@ describe('RNGBlockhash contract', function() {
     link = await deployMockContract(users.deployer, LinkTokenInterface.abi, txOverrides())
 
     debug('deploying RNG...')
-    rng = await _getContract('RNGBlockhashHarness', [users.vrfCoordinator._address, link.address])
+    rng = await _getContract('RNGChainlinkHarness', [users.vrfCoordinator._address, link.address])
   })
 
   describe('setKeyhash()', () => {
@@ -79,20 +79,27 @@ describe('RNGBlockhash contract', function() {
       // Owner; Insufficient balance
       await link.mock.balanceOf.withArgs(rng.address).returns(smallAmount)
       await expect(rng.withdrawLink(bigAmount))
-        .to.be.revertedWith('RNGBlockhash/insuff-link')
+        .to.be.revertedWith('RNGChainlink/insuff-link')
 
       // Owner; Sufficient balance; transfer fails
       await link.mock.balanceOf.withArgs(rng.address).returns(bigAmount)
       await link.mock.transfer.withArgs(users.deployer._address, smallAmount).returns(false)
       await expect(rng.withdrawLink(smallAmount))
-        .to.be.revertedWith('RNGBlockhash/transfer-failed')
+        .to.be.revertedWith('RNGChainlink/transfer-failed')
 
       // Owner; Sufficient balance
       await link.mock.balanceOf.withArgs(rng.address).returns(bigAmount)
       await link.mock.transfer.withArgs(users.deployer._address, smallAmount).returns(true)
       await expect(rng.withdrawLink(smallAmount))
-        .to.not.be.revertedWith('RNGBlockhash/insuff-link')
-        .to.not.be.revertedWith('RNGBlockhash/transfer-failed')
+        .to.not.be.revertedWith('RNGChainlink/insuff-link')
+        .to.not.be.revertedWith('RNGChainlink/transfer-failed')
+    })
+  })
+
+  describe('getLastRequestId()', () => {
+    it('should return the next unused request ID', async () => {
+      await rng.setRequestCount(123)
+      expect(await rng.getLastRequestId()).to.equal(123)
     })
   })
 
@@ -175,11 +182,11 @@ describe('RNGBlockhash contract', function() {
     it('should disallow any account but the VRF to fulfill VRF requests', async () => {
       // Not-VRF
       await expect(rng.fulfillRandomness(VRF.keyHash.default, toWei('12345')))
-        .to.be.revertedWith('RNGBlockhash/invalid-vrf-coordinator')
+        .to.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
 
       // VRF
       await expect(rng.connect(users.vrfCoordinator).fulfillRandomness(VRF.keyHash.default, toWei('12345')))
-        .to.not.be.revertedWith('RNGBlockhash/invalid-vrf-coordinator')
+        .to.not.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
     })
   })
 })

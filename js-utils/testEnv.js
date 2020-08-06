@@ -9,8 +9,15 @@ ethers.errors.setLogLevel('error')
 const getTestUsers = async () => {
   // deployer is specified at index "0" in buidler.config.js
   // vrfCoordinator is specified at index "1"
-  const [deployer, vrfCoordinator, vdfBeacon, user1, user2, stranger] = await buidler.ethers.getSigners()
-  return {deployer, vrfCoordinator, vdfBeacon, user1, user2, stranger}
+  const [deployer, vrfCoordinator, user1, user2, stranger] = await buidler.ethers.getSigners()
+  return {deployer, vrfCoordinator, user1, user2, stranger}
+}
+
+const callMultiReturnTx = async (contract, method, params = []) => {
+  let fxn = contract.interface.functions[method]
+  let call = fxn.encode(params)
+  let result = await contract.provider.call({ to: contract.address, data: call })
+  return fxn.decode(result)
 }
 
 module.exports = {
@@ -20,6 +27,7 @@ module.exports = {
     expect,
 
     getTestUsers,
+    callMultiReturnTx,
     deployContract,
     deployMockContract,
 

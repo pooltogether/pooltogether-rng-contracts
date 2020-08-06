@@ -16,7 +16,7 @@ import "./RNGInterface.sol";
 //
 ///////////////////////////////////////////////////////////
 
-contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
+contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   using SafeMath for uint256;
   using SafeCast for uint256;
 
@@ -44,7 +44,7 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
 
 
   modifier onlyVRFCoordinator {
-    require(msg.sender == vrfCoordinator, "RNGBlockhash/invalid-vrf-coordinator");
+    require(msg.sender == vrfCoordinator, "RNGChainlink/invalid-vrf-coordinator");
     _;
   }
 
@@ -67,8 +67,12 @@ contract RNGBlockhash is RNGInterface, VRFConsumerBase, Ownable {
   }
 
   function withdrawLink(uint256 amount) external onlyOwner {
-    require(LINK.balanceOf(address(this)) >= amount, "RNGBlockhash/insuff-link");
-    require(LINK.transfer(msg.sender, amount), "RNGBlockhash/transfer-failed");
+    require(LINK.balanceOf(address(this)) >= amount, "RNGChainlink/insuff-link");
+    require(LINK.transfer(msg.sender, amount), "RNGChainlink/transfer-failed");
+  }
+
+  function getLastRequestId() external override view returns (uint32 requestId) {
+    return requestCount;
   }
 
   /**
