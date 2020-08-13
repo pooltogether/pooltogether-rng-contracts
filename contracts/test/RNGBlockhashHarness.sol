@@ -2,15 +2,9 @@
 
 pragma solidity ^0.6.6;
 
-import "../RNGChainlink.sol";
+import "../RNGBlockhash.sol";
 
-contract RNGChainlinkHarness is RNGChainlink {
-
-  constructor(address _vrfCoordinator, address _link)
-    public
-    RNGChainlink(_vrfCoordinator, _link)
-  {
-  }
+contract RNGBlockhashHarness is RNGBlockhash {
 
   function setRequestCount(uint32 _requestCount) external {
     requestCount = _requestCount;

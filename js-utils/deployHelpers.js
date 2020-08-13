@@ -18,12 +18,6 @@ const VRF = {
     1       : toWei('1'), // 1 LINK
     3       : toWei('1'), // 1 LINK
     42      : toWei('1'), // 1 LINK
-  },
-  threshold: {
-    default : toWei('0.01'),
-    1       : toWei('0.01'),
-    3       : toWei('0.01'),
-    42      : toWei('0.01'),
   }
 }
 

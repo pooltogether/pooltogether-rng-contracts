@@ -55,47 +55,6 @@ describe('RNGChainlink contract', function() {
     })
   })
 
-  describe('setThreshold()', () => {
-    it('should allow only the Owner to update the threshold for VRF', async () => {
-      // Non-Owner
-      await expect(rng.connect(users.stranger).setThreshold(VRF.threshold.default))
-        .to.be.revertedWith('Ownable: caller is not the owner')
-
-      // Owner
-      await expect(rng.setThreshold(VRF.threshold.default))
-        .to.not.be.revertedWith('Ownable: caller is not the owner')
-    })
-  })
-
-  describe('withdrawLink()', () => {
-    it('should allow only the Owner to withdraw LINK from the contract', async () => {
-      const bigAmount = toWei('100')
-      const smallAmount = toWei('10')
-
-      // Non-Owner
-      await expect(rng.connect(users.stranger).withdrawLink(smallAmount))
-        .to.be.revertedWith('Ownable: caller is not the owner')
-
-      // Owner; Insufficient balance
-      await link.mock.balanceOf.withArgs(rng.address).returns(smallAmount)
-      await expect(rng.withdrawLink(bigAmount))
-        .to.be.revertedWith('RNGChainlink/insuff-link')
-
-      // Owner; Sufficient balance; transfer fails
-      await link.mock.balanceOf.withArgs(rng.address).returns(bigAmount)
-      await link.mock.transfer.withArgs(users.deployer._address, smallAmount).returns(false)
-      await expect(rng.withdrawLink(smallAmount))
-        .to.be.revertedWith('RNGChainlink/transfer-failed')
-
-      // Owner; Sufficient balance
-      await link.mock.balanceOf.withArgs(rng.address).returns(bigAmount)
-      await link.mock.transfer.withArgs(users.deployer._address, smallAmount).returns(true)
-      await expect(rng.withdrawLink(smallAmount))
-        .to.not.be.revertedWith('RNGChainlink/insuff-link')
-        .to.not.be.revertedWith('RNGChainlink/transfer-failed')
-    })
-  })
-
   describe('getLastRequestId()', () => {
     it('should return the next unused request ID', async () => {
       await rng.setRequestCount(123)
@@ -103,44 +62,35 @@ describe('RNGChainlink contract', function() {
     })
   })
 
-  describe('requestRandomNumber()', () => {
-    it('should get a random number from the blockhash', async () => {
-      const requestId = ethers.constants.One
-      const token = link.address
-      const budget = toWei('1')
-
-      await rng.setThreshold(budget.add(toWei('0.5'))) // Blockhash: budget < threshold
-      await link.mock.balanceOf.withArgs(rng.address).returns(toWei('100'))
-
-      await expect(rng.requestRandomNumber(token, budget))
-        .to.emit(rng, 'RandomNumberRequested')
-        .withArgs(requestId, users.deployer._address, token, budget)
-
-      // Confirm immediate completion
-      expect(await rng.isRequestComplete(requestId)).to.equal(true)
+  describe('getRequestFee()', () => {
+    it('should return the fee for a request', async () => {
+      await rng.setFee(VRF.fee.default)
+      const feeData = await rng.getRequestFee()
+      expect(feeData.feeToken).to.equal(link.address)
+      expect(feeData.requestFee).to.equal(VRF.fee.default)
     })
+  })
 
+  describe('requestRandomNumber()', () => {
     it('should get a random number from the VRF', async () => {
       const requestId = ethers.constants.One
-      const token = link.address
-      const budget = toWei('1')
+      const fee = toWei('1')
 
       // Presets
       await rng.setFee(VRF.fee.default)
       await rng.setKeyhash(VRF.keyHash.default)
-      await rng.setThreshold(budget.sub(toWei('0.5'))) // VRF: budget >= threshold
 
       // Mocks
-      await link.mock.balanceOf.withArgs(rng.address).returns(toWei('100'))
+      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, fee).returns(true)
 
       const blockhash = (await ethers.provider.getBlock()).hash
       const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, blockhash])
       await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
 
       // Test
-      await expect(rng.requestRandomNumber(token, budget))
+      await expect(rng.requestRandomNumber())
         .to.emit(rng, 'RandomNumberRequested')
-        .withArgs(requestId, users.deployer._address, token, budget)
+        .withArgs(requestId, users.deployer._address)
 
       // Confirm delayed completion
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
@@ -150,22 +100,11 @@ describe('RNGChainlink contract', function() {
   describe('isRequestComplete()', () => {
     it('should check a request by ID and confirm if it is complete or not', async () => {
       const requestId = ethers.constants.One
-      const RngRequestType = {INTERNAL: 0, CHAINLINK: 1} // Mock Enum
 
-      // Internal
-      await rng.setRequestType(requestId, RngRequestType.INTERNAL)
-      await rng.setRequestState(requestId, false)
+      await rng.setRandomNumber(requestId, 0)
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
 
-      await rng.setRequestState(requestId, true)
-      expect(await rng.isRequestComplete(requestId)).to.equal(true)
-
-      // Chainlink
-      await rng.setRequestType(requestId, RngRequestType.CHAINLINK)
-      await rng.setRequestState(requestId, false)
-      expect(await rng.isRequestComplete(requestId)).to.equal(false)
-
-      await rng.setRequestState(requestId, true)
+      await rng.setRandomNumber(requestId, 123)
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
     })
   })

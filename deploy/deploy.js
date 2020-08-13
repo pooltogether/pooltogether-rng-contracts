@@ -42,28 +42,23 @@ module.exports = async (buidler) => {
   log("  - LINK: ", Link.address)
   log(" ")
 
+  // Blockhash RNG
+  const RNGBlockhash = await _getContract('RNGBlockhash', [])
+
   // Chainlink VRF
   const RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, Link.address])
-
-  // RNG Coordinator
-  const RNGCoordinator = await _getContract('RNGCoordinator', [])
 
   log("\n  Initializing RNGChainlink:")
   log("  - fee:  ", VRF.fee[network.chainId] || VRF.fee.default)
   log("  - keyHash:  ", VRF.keyHash[network.chainId] || VRF.keyHash.default)
-  log("  - threshold: ", VRF.threshold[network.chainId] || VRF.threshold.default)
   log(" ")
   await RNGChainlink.setFee(VRF.fee[network.chainId] || VRF.fee.default)
   await RNGChainlink.setKeyhash(VRF.keyHash[network.chainId] || VRF.keyHash.default)
-  await RNGChainlink.setThreshold(VRF.threshold[network.chainId] || VRF.threshold.default)
-
-  log("\n  Initializing RNGCoordinator:")
-  await RNGCoordinator.addRngService(RNGChainlink.address)
 
   // Display Contract Addresses
   log("\n  Contract Deployments Complete!\n")
+  log("  - RNGBlockhash:   ", RNGBlockhash.address)
   log("  - RNGChainlink:   ", RNGChainlink.address)
-  log("  - RNGCoordinator: ", RNGCoordinator.address)
 
   log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 }
