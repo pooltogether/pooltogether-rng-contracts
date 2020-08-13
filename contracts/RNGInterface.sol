@@ -18,6 +18,10 @@ interface RNGInterface {
   /// @param randomNumber The random number produced by the 3rd-party service
   event RandomNumberCompleted(uint32 indexed id, uint256 randomNumber);
 
+  /// @notice Gets the last request id used by the RNG service
+  /// @return requestId The last request id used in the last request
+  function getLastRequestId() external view returns (uint32 requestId);
+
   /// @notice Sends a request for a random number to the 3rd-party service
   /// @dev Some services will complete the request immediately, others may have a time-delay
   /// @dev Some services require payment in the form of a `token`, such as $LINK for Chainlink VRF

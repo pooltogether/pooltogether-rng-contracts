@@ -27,15 +27,6 @@ const VRF = {
   }
 }
 
-const VDF = {
-  pulse: {
-    default : 820,
-    1       : 820,
-    3       : 820,
-    42      : 820,
-  }
-}
-
 const txOverrides = (options = {}) => ({gas: 20000000, ...options})
 
 const chainName = (chainId) => {
@@ -61,7 +52,6 @@ const contractManager = (buidler) => async (contractName, contractArgs = [], dep
 
 module.exports = {
   VRF,
-  VDF,
   txOverrides,
   contractManager,
   chainName,
