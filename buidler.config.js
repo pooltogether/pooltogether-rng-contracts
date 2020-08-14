@@ -56,6 +56,15 @@ module.exports = {
         initialIndex: 0,
         count: 3,
       }
+    },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      gasPrice: 10e9,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC,
+        initialIndex: 0,
+        count: 3,
+      }
     }
   },
   gasReporter: {
@@ -71,18 +80,14 @@ module.exports = {
       default: 1, // Local Wallet; Account 2
       1: '', // mainnet
       3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
+      4: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // rinkeby
       42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
-    },
-    vdfBeacon: {
-      default: 2, // Local Wallet; Account 3
-      1: '0xC405fF8406bFfBc97bc46a1Ae5ECe55112DcF8f4', // mainnet
-      3: '0xfd480d2b719e28B3B76c8e06B66BA774703628BA', // ropsten (Mocked Beacon)
-      42: '0x7c1398cb8a310B5737102009F628d76c0520241F', // kovan (Mocked Beacon)
     },
     linkToken: {
       default: 0, // not used; Link token gets deployed on local
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet
       3: '0x20fE562d797A42Dcb3399062AE9546cd06f63280', // ropsten
+      4: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709', // rinkeby
       42: '0xa36085F69e2889c224210F603D836748e7dC0088', // kovan
     }
   }

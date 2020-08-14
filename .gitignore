@@ -12,5 +12,5 @@ coverage.json
 .openzeppelin/.session
 .oz-migrate/dev-*
 test-results.xml
-deployments/*
+deployments/local*
 .DS_Store
