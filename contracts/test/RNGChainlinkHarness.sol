@@ -6,6 +6,8 @@ import "../RNGChainlink.sol";
 
 contract RNGChainlinkHarness is RNGChainlink {
 
+  uint256 internal _seed;
+
   constructor(address _vrfCoordinator, address _link)
     public
     RNGChainlink(_vrfCoordinator, _link)
@@ -20,7 +22,11 @@ contract RNGChainlinkHarness is RNGChainlink {
     randomNumbers[requestId] = rand;
   }
 
+  function setSeed(uint256 seed) external {
+    _seed = seed;
+  }
+
   function _getSeed() internal override view returns (uint256 seed) {
-    return uint256(blockhash(block.number - 2)); // -2 since unit-test is 1 mock behind
+    return _seed;
   }
 }

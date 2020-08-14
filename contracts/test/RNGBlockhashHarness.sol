@@ -6,6 +6,8 @@ import "../RNGBlockhash.sol";
 
 contract RNGBlockhashHarness is RNGBlockhash {
 
+  uint256 internal _seed;
+
   function setRequestCount(uint32 _requestCount) external {
     requestCount = _requestCount;
   }
@@ -14,7 +16,11 @@ contract RNGBlockhashHarness is RNGBlockhash {
     randomNumbers[requestId] = rand;
   }
 
+  function setSeed(uint256 seed) external {
+    _seed = seed;
+  }
+
   function _getSeed() internal override view returns (uint256 seed) {
-    return uint256(blockhash(block.number - 2)); // -2 since unit-test is 1 mock behind
+    return _seed;
   }
 }

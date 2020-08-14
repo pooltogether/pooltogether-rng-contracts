@@ -10,7 +10,10 @@ const {
   txOverrides,
   contractManager,
   toWei,
+  toBytes32,
 } = require('../js-utils/deployHelpers')
+
+const { increaseTime } = require('./helpers/increaseTime')
 
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
 const _getContract = contractManager(buidler)
@@ -29,6 +32,10 @@ describe('RNGChainlink contract', function() {
 
     debug('deploying RNG...')
     rng = await _getContract('RNGChainlinkHarness', [users.vrfCoordinator._address, link.address])
+
+    // Presets
+    await rng.setFee(VRF.fee.default)
+    await rng.setKeyhash(VRF.keyHash.default)
   })
 
   describe('setKeyhash()', () => {
@@ -76,15 +83,12 @@ describe('RNGChainlink contract', function() {
       const requestId = ethers.constants.One
       const fee = toWei('1')
 
-      // Presets
-      await rng.setFee(VRF.fee.default)
-      await rng.setKeyhash(VRF.keyHash.default)
-
-      // Mocks
+      // Prep
+      await rng.setRequestCount(0)
+      await rng.setSeed(123)
       await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, fee).returns(true)
 
-      const blockhash = (await ethers.provider.getBlock()).hash
-      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, blockhash])
+      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
       await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
 
       // Test
@@ -101,20 +105,50 @@ describe('RNGChainlink contract', function() {
     it('should check a request by ID and confirm if it is complete or not', async () => {
       const requestId = ethers.constants.One
 
-      await rng.setRandomNumber(requestId, 0)
+      // Prep
+      await rng.setRequestCount(0)
+      await rng.setSeed(123)
+      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, VRF.fee.default).returns(true)
+
+      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
+      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
+
+      // Test
+      await rng.requestRandomNumber()
+
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
 
-      await rng.setRandomNumber(requestId, 123)
+      // advance 2 blocks
+      await increaseTime(1000)
+      await increaseTime(1000)
+
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
     })
   })
 
   describe('randomNumber()', () => {
-    it('should return a previous random number by request ID', async () => {
+    it('should return a previous random number by request ID'/*, async () => {
       const requestId = ethers.constants.One
-      await rng.setRandomNumber(requestId, 123)
-      expect(await rng.randomNumber(requestId)).to.equal(123)
-    })
+
+      // Prep
+      await rng.setRequestCount(0)
+      await rng.setSeed(123)
+      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, VRF.fee.default).returns(true)
+
+      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
+      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
+
+      await rng.requestRandomNumber()
+
+      // advance 2 blocks
+      await increaseTime(1000)
+      await increaseTime(1000)
+
+      await rng.setSeed(123)
+      await expect(rng.randomNumber(requestId))
+        .to.emit(rng, 'RandomNumberCompleted')
+        .withArgs(requestId, 123)
+    }*/)
   })
 
   describe('fulfillRandomness()', () => {

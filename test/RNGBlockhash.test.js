@@ -10,12 +10,13 @@ const {
   contractManager,
   toWei,
 } = require('../js-utils/deployHelpers')
+
+const { increaseTime } = require('./helpers/increaseTime')
 const { AddressZero } = require('ethers/constants')
 
 const _getContract = contractManager(buidler)
 
 const debug = require('debug')('ptv3:RNGBlockhash.test')
-
 
 describe('RNGBlockhash contract', function() {
   let users, rng, link
@@ -51,7 +52,12 @@ describe('RNGBlockhash contract', function() {
         .to.emit(rng, 'RandomNumberRequested')
         .withArgs(requestId, users.deployer._address)
 
-      // Confirm immediate completion
+      expect(await rng.isRequestComplete(requestId)).to.equal(false)
+
+      // advance 2 blocks
+      await increaseTime(1000)
+      await increaseTime(1000)
+
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
     })
   })
@@ -59,12 +65,15 @@ describe('RNGBlockhash contract', function() {
   describe('isRequestComplete()', () => {
     it('should check a request by ID and confirm if it is complete or not', async () => {
       const requestId = ethers.constants.One
+      await rng.setRequestCount(0)
+      await rng.requestRandomNumber()
 
-      // Internal
-      await rng.setRandomNumber(requestId, 0)
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
 
-      await rng.setRandomNumber(requestId, 123)
+      // advance 2 blocks
+      await increaseTime(1000)
+      await increaseTime(1000)
+
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
     })
   })
@@ -72,8 +81,17 @@ describe('RNGBlockhash contract', function() {
   describe('randomNumber()', () => {
     it('should return a previous random number by request ID', async () => {
       const requestId = ethers.constants.One
-      await rng.setRandomNumber(requestId, 123)
-      expect(await rng.randomNumber(requestId)).to.equal(123)
+      await rng.setRequestCount(0)
+      await rng.requestRandomNumber()
+
+      // advance 2 blocks
+      await increaseTime(1000)
+      await increaseTime(1000)
+
+      await rng.setSeed(123)
+      await expect(rng.randomNumber(requestId))
+        .to.emit(rng, 'RandomNumberCompleted')
+        .withArgs(requestId, 123)
     })
   })
 })

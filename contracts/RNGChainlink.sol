@@ -24,6 +24,9 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint32 => uint256) internal randomNumbers;
 
+  /// @dev A list of blocks to be locked at based on past requests mapped by request id
+  mapping(uint32 => uint32) internal requestLockBlock;
+
   /// @dev A mapping from Chainlink request ids to internal request ids
   mapping(bytes32 => uint32) internal chainlinkRequestIds;
 
@@ -40,10 +43,14 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   {
   }
 
+  /// @notice Allows governance to set the VRF keyhash
+  /// @param _keyhash The keyhash to be used by the VRF
   function setKeyhash(bytes32 _keyhash) external onlyOwner {
     keyHash = _keyhash;
   }
 
+  /// @notice Allows governance to set the fee per request required by the VRF
+  /// @param _fee The fee to be charged for a request
   function setFee(uint256 _fee) external onlyOwner {
     fee = _fee;
   }
@@ -77,6 +84,8 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
     // send request (costs fee)
     requestId = _requestRandomness(seed);
 
+    requestLockBlock[requestId] = lockBlock;
+
     emit RandomNumberRequested(requestId, msg.sender);
   }
 
@@ -85,16 +94,19 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return isCompleted True if the request has completed and a random number is available, false otherwise
   function isRequestComplete(uint32 requestId) external override view returns (bool isCompleted) {
-    return randomNumbers[requestId] > 0;
+    return block.number > requestLockBlock[requestId];
   }
 
   /// @notice Gets the random number produced by the 3rd-party service
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return randomNum The random number
-  function randomNumber(uint32 requestId) external override view returns (uint256 randomNum) {
+  function randomNumber(uint32 requestId) external override returns (uint256 randomNum) {
     return randomNumbers[requestId];
   }
 
+  /// @dev Requests a new random number from the Chainlink VRF
+  /// @dev The result of the request is returned in the function `fulfillRandomness`
+  /// @param seed The seed used as entropy for the request
   function _requestRandomness(uint256 seed) internal returns (uint32 requestId) {
     // Get next request ID
     requestId = _getNextRequestId();
@@ -112,15 +124,22 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
     _storeResult(internalRequestId, randomness.mod(20).add(1));
   }
 
+  /// @dev Gets the next consecutive request ID to be used
+  /// @return requestId The ID to be used for the next request
   function _getNextRequestId() internal returns (uint32 requestId) {
     requestCount = uint256(requestCount).add(1).toUint32();
     requestId = requestCount;
   }
 
+  /// @dev Gets a seed for a random number from the latest available blockhash
+  /// @return seed The seed to be used for generating a random number
   function _getSeed() internal virtual view returns (uint256 seed) {
     return uint256(blockhash(block.number - 1));
   }
 
+  /// @dev Stores the latest random number by request ID and logs the event
+  /// @param requestId The ID of the request to store the random number
+  /// @param result The random number for the request ID
   function _storeResult(uint32 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
