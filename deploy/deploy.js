@@ -8,7 +8,6 @@ const {
   chainName,
 } = require('../js-utils/deployHelpers')
 
-const KOVAN_CHAIN_ID = 42
 const BUIDLER_EVM_CHAIN_ID = 31337
 
 module.exports = async (buidler) => {

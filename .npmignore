@@ -12,5 +12,5 @@ cache
 .openzeppelin/.session
 .oz-migrate/dev-*
 test-results.xml
-deployments/*
+deployments/local*
 *.code-workspace
