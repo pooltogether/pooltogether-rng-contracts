@@ -13,6 +13,7 @@ const {
   toBytes32,
 } = require('../js-utils/deployHelpers')
 
+const { call } = require('./helpers/call')
 const { increaseTime } = require('./helpers/increaseTime')
 
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
@@ -127,28 +128,16 @@ describe('RNGChainlink contract', function() {
   })
 
   describe('randomNumber()', () => {
-    it('should return a previous random number by request ID'/*, async () => {
+    it('should return a previous random number by request ID', async () => {
       const requestId = ethers.constants.One
 
       // Prep
       await rng.setRequestCount(0)
-      await rng.setSeed(123)
-      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, VRF.fee.default).returns(true)
+      await rng.setRandomNumber(requestId, 123)
 
-      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
-      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
-
-      await rng.requestRandomNumber()
-
-      // advance 2 blocks
-      await increaseTime(1000)
-      await increaseTime(1000)
-
-      await rng.setSeed(123)
-      await expect(rng.randomNumber(requestId))
-        .to.emit(rng, 'RandomNumberCompleted')
-        .withArgs(requestId, 123)
-    }*/)
+      // Test
+      expect(await call(rng, 'randomNumber', requestId)).to.equal(123)
+    })
   })
 
   describe('fulfillRandomness()', () => {
