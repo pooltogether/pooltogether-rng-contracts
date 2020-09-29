@@ -42,5 +42,11 @@
     "solc": "0.6.6",
     "solhint": "^3.0.0",
     "solidity-coverage": "^0.7.4"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "abis/**",
+    "contracts/**",
+    "deployments/**"
+  ]
 }
