@@ -6,14 +6,12 @@ const {
 } = require('../js-utils/testEnv')
 
 const {
-  VRF,
   txOverrides,
   contractManager,
   toWei,
   toBytes32,
 } = require('../js-utils/deployHelpers')
 
-const { call } = require('./helpers/call')
 const { increaseTime } = require('./helpers/increaseTime')
 
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
@@ -21,9 +19,10 @@ const _getContract = contractManager(buidler)
 
 const debug = require('debug')('ptv3:RNGChainlink.test')
 
-
 describe('RNGChainlink contract', function() {
   let users, rng, link
+
+  let fee, keyhash
 
   beforeEach(async () => {
     users = await getTestUsers()
@@ -34,19 +33,22 @@ describe('RNGChainlink contract', function() {
     debug('deploying RNG...')
     rng = await _getContract('RNGChainlinkHarness', [users.vrfCoordinator._address, link.address])
 
+    fee = ethers.utils.parseEther('1')
+    keyhash = '0xced103054e349b8dfb51352f0f8fa9b5d20dde3d06f9f43cb2b85bc64b238205'
+
     // Presets
-    await rng.setFee(VRF.fee.default)
-    await rng.setKeyhash(VRF.keyHash.default)
+    await rng.setFee(fee)
+    await rng.setKeyhash(keyhash)
   })
 
   describe('setKeyhash()', () => {
     it('should allow only the Owner to update the key-hash for VRF', async () => {
       // Non-Owner
-      await expect(rng.connect(users.stranger).setKeyhash(VRF.keyHash.default))
+      await expect(rng.connect(users.stranger).setKeyhash(keyhash))
         .to.be.revertedWith('Ownable: caller is not the owner')
 
       // Owner
-      await expect(rng.setKeyhash(VRF.keyHash.default))
+      await expect(rng.setKeyhash(keyhash))
         .to.not.be.revertedWith('Ownable: caller is not the owner')
     })
   })
@@ -54,11 +56,11 @@ describe('RNGChainlink contract', function() {
   describe('setFee()', () => {
     it('should allow only the Owner to update the fee for VRF', async () => {
       // Non-Owner
-      await expect(rng.connect(users.stranger).setFee(VRF.fee.default))
+      await expect(rng.connect(users.stranger).setFee(fee))
         .to.be.revertedWith('Ownable: caller is not the owner')
 
       // Owner
-      await expect(rng.setFee(VRF.fee.default))
+      await expect(rng.setFee(fee))
         .to.not.be.revertedWith('Ownable: caller is not the owner')
     })
   })
@@ -72,10 +74,10 @@ describe('RNGChainlink contract', function() {
 
   describe('getRequestFee()', () => {
     it('should return the fee for a request', async () => {
-      await rng.setFee(VRF.fee.default)
+      await rng.setFee(fee)
       const feeData = await rng.getRequestFee()
       expect(feeData.feeToken).to.equal(link.address)
-      expect(feeData.requestFee).to.equal(VRF.fee.default)
+      expect(feeData.requestFee).to.equal(fee)
     })
   })
 
@@ -89,8 +91,8 @@ describe('RNGChainlink contract', function() {
       await rng.setSeed(123)
       await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, fee).returns(true)
 
-      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
-      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
+      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [keyhash, 123])
+      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, fee, seed).returns(true)
 
       // Test
       await expect(rng.requestRandomNumber())
@@ -109,10 +111,10 @@ describe('RNGChainlink contract', function() {
       // Prep
       await rng.setRequestCount(0)
       await rng.setSeed(123)
-      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, VRF.fee.default).returns(true)
+      await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, fee).returns(true)
 
-      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [VRF.keyHash.default, 123])
-      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, VRF.fee.default, seed).returns(true)
+      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [keyhash, 123])
+      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, fee, seed).returns(true)
 
       // Test
       await rng.requestRandomNumber()
@@ -135,19 +137,18 @@ describe('RNGChainlink contract', function() {
       await rng.setRequestCount(0)
       await rng.setRandomNumber(requestId, 123)
 
-      // Test
-      expect(await call(rng, 'randomNumber', requestId)).to.equal(123)
+      expect(await rng.callStatic.randomNumber(requestId)).to.equal(123)
     })
   })
 
   describe('fulfillRandomness()', () => {
     it('should disallow any account but the VRF to fulfill VRF requests', async () => {
       // Not-VRF
-      await expect(rng.fulfillRandomness(VRF.keyHash.default, toWei('12345')))
+      await expect(rng.fulfillRandomness(keyhash, toWei('12345')))
         .to.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
 
       // VRF
-      await expect(rng.connect(users.vrfCoordinator).fulfillRandomness(VRF.keyHash.default, toWei('12345')))
+      await expect(rng.connect(users.vrfCoordinator).fulfillRandomness(keyhash, toWei('12345')))
         .to.not.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
     })
   })

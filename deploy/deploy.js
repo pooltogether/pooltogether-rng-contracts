@@ -1,63 +1,78 @@
 // using plugin: buidler-deploy
 // reference: https://buidler.dev/plugins/buidler-deploy.html
 
-const { LinkTokenFactory } = require('@chainlink/test-helpers/dist/src/generated/LinkTokenFactory')
 const {
-  VRF,
   contractManager,
   chainName,
 } = require('../js-utils/deployHelpers')
 
-const BUIDLER_EVM_CHAIN_ID = 31337
+const VDFConfig = require('../vdf.config')
+
+const debug = require('debug')('deploy.js')
 
 module.exports = async (buidler) => {
   const { ethers, getNamedAccounts, deployments } = buidler
-  const { log } = deployments
+  const { deploy } = deployments
   const _getContract = contractManager(buidler)
   const network = await ethers.provider.getNetwork()
+  const { chainId } = network
 
   // Named accounts, defined in buidler.config.js:
-  const { deployer, vrfCoordinator, linkToken } = await getNamedAccounts()
+  const {
+    vrfCoordinator,
+    linkToken
+  } = await getNamedAccounts()
+
+  const {
+    fee,
+    keyHash
+  } = VDFConfig
+
   const [ deployerWallet ] = await ethers.getSigners()
 
-  log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-  log("PoolTogether RNG Service - Contract Deploy Script")
-  log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+  const feeValue = fee[chainId] || fee.default
+  const keyHashValue = keyHash[chainId] || keyHash.default
 
-  log("  Deploying to Network: ", chainName(network.chainId))
+  debug("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+  debug("PoolTogether RNG Service - Contract Deploy Script")
+  debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
-  let Link = {address: linkToken};
-  if (network.chainId === BUIDLER_EVM_CHAIN_ID) {
-    log("\n  Deploying LINK token...")
-    const linkFactory = new LinkTokenFactory(deployerWallet)
-    Link = await linkFactory.deploy();
+  debug("  Deploying to Network: ", chainName(chainId))
+
+  let linkAddress = linkToken
+  console.log({ linkAddress} )
+  if (!linkAddress) {
+    debug("\n  Deploying LINK token...")
+    const linkResult = await deploy('Link', {
+      contract: 'ERC20Mintable',
+      from: deployerWallet._address,
+      args: ['Chainlink Link', 'LINK']
+    })
+    linkAddress = linkResult.address
   }
 
-  log("\n  Using Accounts:")
-  log("  - Deployer:  ", deployer)
-
-  log("\n  Using Contracts:")
-  log("  - VRF:  ", vrfCoordinator)
-  log("  - LINK: ", Link.address)
-  log(" ")
+  debug("\n  Using Contracts:")
+  debug("  - VRF:  ", vrfCoordinator)
+  debug("  - LINK: ", linkAddress)
+  debug(" ")
 
   // Blockhash RNG
   const RNGBlockhash = await _getContract('RNGBlockhash', [])
 
   // Chainlink VRF
-  const RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, Link.address])
+  const RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, linkAddress])
 
-  log("\n  Initializing RNGChainlink:")
-  log("  - fee:  ", VRF.fee[network.chainId] || VRF.fee.default)
-  log("  - keyHash:  ", VRF.keyHash[network.chainId] || VRF.keyHash.default)
-  log(" ")
-  await RNGChainlink.setFee(VRF.fee[network.chainId] || VRF.fee.default)
-  await RNGChainlink.setKeyhash(VRF.keyHash[network.chainId] || VRF.keyHash.default)
+  debug("\n  Initializing RNGChainlink:")
+  debug("  - fee:  ", feeValue)
+  debug("  - keyHash:  ", keyHashValue)
+  debug(" ")
+  await RNGChainlink.setFee(feeValue)
+  await RNGChainlink.setKeyhash(keyHashValue)
 
   // Display Contract Addresses
-  log("\n  Contract Deployments Complete!\n")
-  log("  - RNGBlockhash:   ", RNGBlockhash.address)
-  log("  - RNGChainlink:   ", RNGChainlink.address)
+  debug("\n  Contract Deployments Complete!\n")
+  debug("  - RNGBlockhash:   ", RNGBlockhash.address)
+  debug("  - RNGChainlink:   ", RNGChainlink.address)
 
-  log("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+  debug("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 }

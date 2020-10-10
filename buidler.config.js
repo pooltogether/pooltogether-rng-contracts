@@ -1,3 +1,5 @@
+const ethers = require('ethers')
+
 const {TASK_COMPILE_GET_COMPILER_INPUT} = require('@nomiclabs/buidler/builtin-tasks/task-names');
 
 task(TASK_COMPILE_GET_COMPILER_INPUT).setAction(async (_, __, runSuper) => {
@@ -10,6 +12,7 @@ usePlugin('@nomiclabs/buidler-waffle');
 usePlugin('buidler-gas-reporter');
 usePlugin('solidity-coverage');
 usePlugin('buidler-deploy');
+usePlugin("@nomiclabs/buidler-etherscan");
 
 module.exports = {
   solc: {
@@ -35,8 +38,8 @@ module.exports = {
       blockGasLimit: 200000000,
       allowUnlimitedContractSize: true
     },
-    local: {
-      url: 'http://127.0.0.1:' + process.env.LOCAL_BUIDLEREVM_PORT || '8545',
+    localhost: {
+      url: 'http://127.0.0.1:8545',
       blockGasLimit: 200000000
     },
     kovan: {
@@ -78,13 +81,12 @@ module.exports = {
     },
     vrfCoordinator: {
       default: 1, // Local Wallet; Account 2
-      1: '', // mainnet
+      1: '0xf0d54349aDdcf704F77AE15b96510dEA15cb7952', // mainnet
       3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
       4: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // rinkeby
       42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
     },
     linkToken: {
-      default: 0, // not used; Link token gets deployed on local
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet
       3: '0x20fE562d797A42Dcb3399062AE9546cd06f63280', // ropsten
       4: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709', // rinkeby

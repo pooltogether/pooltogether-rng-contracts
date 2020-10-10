@@ -4,8 +4,6 @@ const { deployments } = buidler
 const { deployContract, deployMockContract } = require('ethereum-waffle')
 const { expect } = require('chai')
 
-ethers.errors.setLogLevel('error')
-
 const getTestUsers = async () => {
   // deployer is specified at index "0" in buidler.config.js
   // vrfCoordinator is specified at index "1"

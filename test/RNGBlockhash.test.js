@@ -12,7 +12,7 @@ const {
 } = require('../js-utils/deployHelpers')
 
 const { increaseTime } = require('./helpers/increaseTime')
-const { AddressZero } = require('ethers/constants')
+const { AddressZero } = require('ethers').constants
 
 const _getContract = contractManager(buidler)
 
