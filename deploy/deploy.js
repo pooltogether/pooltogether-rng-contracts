@@ -38,19 +38,7 @@ module.exports = async (buidler) => {
   debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
   debug("  Deploying to Network: ", chainName(chainId))
-
-  let linkAddress = linkToken
-  console.log({ linkAddress} )
-  if (!linkAddress) {
-    debug("\n  Deploying LINK token...")
-    const linkResult = await deploy('Link', {
-      contract: 'ERC20Mintable',
-      from: deployerWallet._address,
-      args: ['Chainlink Link', 'LINK']
-    })
-    linkAddress = linkResult.address
-  }
-
+  
   debug("\n  Using Contracts:")
   debug("  - VRF:  ", vrfCoordinator)
   debug("  - LINK: ", linkAddress)
@@ -59,20 +47,35 @@ module.exports = async (buidler) => {
   // Blockhash RNG
   const RNGBlockhash = await _getContract('RNGBlockhash', [])
 
-  // Chainlink VRF
-  const RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, linkAddress])
+  let RNGChainlink
 
-  debug("\n  Initializing RNGChainlink:")
-  debug("  - fee:  ", feeValue)
-  debug("  - keyHash:  ", keyHashValue)
-  debug(" ")
-  await RNGChainlink.setFee(feeValue)
-  await RNGChainlink.setKeyhash(keyHashValue)
+  if (vrfCoordinator) {
+    let linkAddress = linkToken
+    if (!linkAddress) {
+      debug("\n  Deploying LINK token...")
+      const linkResult = await deploy('Link', {
+        contract: 'ERC20Mintable',
+        from: deployerWallet._address,
+        args: ['Chainlink Link', 'LINK']
+      })
+      linkAddress = linkResult.address
+    }
+
+    // Chainlink VRF
+    RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, linkAddress])
+
+    debug("\n  Initializing RNGChainlink:")
+    debug("  - fee:  ", feeValue)
+    debug("  - keyHash:  ", keyHashValue)
+    debug(" ")
+    await RNGChainlink.setFee(feeValue)
+    await RNGChainlink.setKeyhash(keyHashValue)
+  }
 
   // Display Contract Addresses
   debug("\n  Contract Deployments Complete!\n")
   debug("  - RNGBlockhash:   ", RNGBlockhash.address)
-  debug("  - RNGChainlink:   ", RNGChainlink.address)
+  debug("  - RNGChainlink:   ", RNGChainlink ? RNGChainlink.address : 'NOT AVAILABLE')
 
   debug("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 }

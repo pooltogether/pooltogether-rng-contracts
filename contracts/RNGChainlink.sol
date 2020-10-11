@@ -4,22 +4,28 @@ pragma solidity ^0.6.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/SafeCast.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
 
 import "./RNGInterface.sol";
 
 contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
-  using SafeMath for uint256;
+  // using SafeMath for uint256;
   using SafeCast for uint256;
 
+  event KeyHashSet(bytes32 keyHash);
+  event FeeSet(uint256 fee);
+  event VrfCoordinatorSet(address indexed vrfCoordinator);
+  event VRFRequested(uint256 indexed requestId, bytes32 indexed chainlinkRequestId);
+
   /// @dev The keyhash used by the Chainlink VRF
-  bytes32 internal keyHash;
+  bytes32 public keyHash;
 
   /// @dev The request fee of the Chainlink VRF
-  uint256 internal fee;
+  uint256 public fee;
 
   /// @dev A counter for the number of requests made used for request ids
-  uint32 internal requestCount;
+  uint32 public requestCount;
 
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint32 => uint256) internal randomNumbers;
@@ -30,29 +36,32 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @dev A mapping from Chainlink request ids to internal request ids
   mapping(bytes32 => uint32) internal chainlinkRequestIds;
 
-  /// @dev Ensure calls are made only by the VRF Coordinator
-  modifier onlyVRFCoordinator {
-    require(msg.sender == vrfCoordinator, "RNGChainlink/invalid-vrf-coordinator");
-    _;
-  }
-
   /// @dev Public constructor
   constructor(address _vrfCoordinator, address _link)
     public
     VRFConsumerBase(_vrfCoordinator, _link)
   {
+    emit VrfCoordinatorSet(_vrfCoordinator);
+  }
+
+  function getLink() external view returns (address) {
+    return address(LINK);
   }
 
   /// @notice Allows governance to set the VRF keyhash
   /// @param _keyhash The keyhash to be used by the VRF
   function setKeyhash(bytes32 _keyhash) external onlyOwner {
     keyHash = _keyhash;
+
+    emit KeyHashSet(keyHash);
   }
 
   /// @notice Allows governance to set the fee per request required by the VRF
   /// @param _fee The fee to be charged for a request
   function setFee(uint256 _fee) external onlyOwner {
     fee = _fee;
+
+    emit FeeSet(fee);
   }
 
   /// @notice Gets the last request id used by the RNG service
@@ -94,7 +103,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return isCompleted True if the request has completed and a random number is available, false otherwise
   function isRequestComplete(uint32 requestId) external override view returns (bool isCompleted) {
-    return block.number > requestLockBlock[requestId];
+    return randomNumbers[requestId] != 0;
   }
 
   /// @notice Gets the random number produced by the 3rd-party service
@@ -114,14 +123,20 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
     // Complete request
     bytes32 vrfRequestId = requestRandomness(keyHash, fee, seed);
     chainlinkRequestIds[vrfRequestId] = requestId;
+
+    emit VRFRequested(requestId, vrfRequestId);
   }
 
   /// @notice Callback function used by VRF Coordinator
   /// @dev The VRF Coordinator will only send this function verified responses.
   /// @dev The VRF Coordinator will not pass randomness that could not be verified.
-  function fulfillRandomness(bytes32 requestId, uint256 randomness) external override onlyVRFCoordinator {
+  function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
     uint32 internalRequestId = chainlinkRequestIds[requestId];
-    _storeResult(internalRequestId, randomness.mod(20).add(1));
+
+    // Store random value
+    randomNumbers[internalRequestId] = randomness;
+
+    emit RandomNumberCompleted(internalRequestId, randomness);
   }
 
   /// @dev Gets the next consecutive request ID to be used
@@ -136,14 +151,6 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   function _getSeed() internal virtual view returns (uint256 seed) {
     return uint256(blockhash(block.number - 1));
   }
-
-  /// @dev Stores the latest random number by request ID and logs the event
-  /// @param requestId The ID of the request to store the random number
-  /// @param result The random number for the request ID
-  function _storeResult(uint32 requestId, uint256 result) internal {
-    // Store random value
-    randomNumbers[requestId] = result;
-
-    emit RandomNumberCompleted(requestId, result);
-  }
 }
+
+

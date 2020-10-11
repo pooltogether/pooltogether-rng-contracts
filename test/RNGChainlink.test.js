@@ -12,6 +12,8 @@ const {
   toBytes32,
 } = require('../js-utils/deployHelpers')
 
+const { getEvents } = require('./helpers/getEvents')
+
 const { increaseTime } = require('./helpers/increaseTime')
 
 const LinkTokenInterface = require('../build/LinkTokenInterface.json')
@@ -41,6 +43,12 @@ describe('RNGChainlink contract', function() {
     await rng.setKeyhash(keyhash)
   })
 
+  describe('getLink()', () => {
+    it('should return link address', async () => {
+      expect(await rng.getLink()).to.equal(link.address)
+    })
+  })
+
   describe('setKeyhash()', () => {
     it('should allow only the Owner to update the key-hash for VRF', async () => {
       // Non-Owner
@@ -49,7 +57,8 @@ describe('RNGChainlink contract', function() {
 
       // Owner
       await expect(rng.setKeyhash(keyhash))
-        .to.not.be.revertedWith('Ownable: caller is not the owner')
+        .to.emit(rng, 'KeyHashSet')
+        .withArgs(keyhash)
     })
   })
 
@@ -61,7 +70,10 @@ describe('RNGChainlink contract', function() {
 
       // Owner
       await expect(rng.setFee(fee))
-        .to.not.be.revertedWith('Ownable: caller is not the owner')
+        .to.emit(rng, 'FeeSet')
+        .withArgs(fee)
+
+      expect(await rng.fee()).to.equal(fee)
     })
   })
 
@@ -105,27 +117,32 @@ describe('RNGChainlink contract', function() {
   })
 
   describe('isRequestComplete()', () => {
-    it('should check a request by ID and confirm if it is complete or not', async () => {
-      const requestId = ethers.constants.One
-
+    it('should return false if request has not completed.', async () => {
       // Prep
-      await rng.setRequestCount(0)
-      await rng.setSeed(123)
       await link.mock.transferFrom.withArgs(users.deployer._address, rng.address, fee).returns(true)
 
-      const seed = ethers.utils.solidityPack(['bytes32', 'uint256'], [keyhash, 123])
-      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, fee, seed).returns(true)
+      const seed = 123
+      await rng.setSeed(seed)
+      const encodedSeed = ethers.utils.solidityPack(['bytes32', 'uint256'], [keyhash, seed])
+      await link.mock.transferAndCall.withArgs(users.vrfCoordinator._address, fee, encodedSeed).returns(true)
 
       // Test
-      await rng.requestRandomNumber()
+      const tx = await rng.requestRandomNumber()
+
+      const events = await getEvents(tx, rng)
+      const event = events.find(event => event.name === 'VRFRequested')
+      const { requestId, chainlinkRequestId } = event.args
+
+      expect(event).to.not.be.undefined
 
       expect(await rng.isRequestComplete(requestId)).to.equal(false)
 
-      // advance 2 blocks
-      await increaseTime(1000)
-      await increaseTime(1000)
+      const rando = 999
+      await rng.connect(users.vrfCoordinator).rawFulfillRandomness(chainlinkRequestId, rando)
 
       expect(await rng.isRequestComplete(requestId)).to.equal(true)
+
+      expect(await rng.callStatic.randomNumber(requestId)).to.equal(rando)
     })
   })
 
@@ -138,18 +155,6 @@ describe('RNGChainlink contract', function() {
       await rng.setRandomNumber(requestId, 123)
 
       expect(await rng.callStatic.randomNumber(requestId)).to.equal(123)
-    })
-  })
-
-  describe('fulfillRandomness()', () => {
-    it('should disallow any account but the VRF to fulfill VRF requests', async () => {
-      // Not-VRF
-      await expect(rng.fulfillRandomness(keyhash, toWei('12345')))
-        .to.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
-
-      // VRF
-      await expect(rng.connect(users.vrfCoordinator).fulfillRandomness(keyhash, toWei('12345')))
-        .to.not.be.revertedWith('RNGChainlink/invalid-vrf-coordinator')
     })
   })
 })

@@ -80,15 +80,12 @@ module.exports = {
       default: 0,  // Local Wallet; Account 1  OR  [ropsten|kovan].accounts from above
     },
     vrfCoordinator: {
-      default: 1, // Local Wallet; Account 2
       1: '0xf0d54349aDdcf704F77AE15b96510dEA15cb7952', // mainnet
-      3: '0xf720CF1B963e0e7bE9F58fd471EFa67e7bF00cfb', // ropsten
-      4: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // rinkeby
-      42: '0xc1031337fe8E75Cf25CAe9828F3BF734d83732e4', // kovan
+      4: '0xb3dCcb4Cf7a26f6cf6B120Cf5A73875B7BBc655B', // rinkeby
+      42: '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9', // kovan
     },
     linkToken: {
       1: '0x514910771AF9Ca656af840dff83E8264EcF986CA', // mainnet
-      3: '0x20fE562d797A42Dcb3399062AE9546cd06f63280', // ropsten
       4: '0x01BE23585060835E02B77ef475b0Cc51aA1e0709', // rinkeby
       42: '0xa36085F69e2889c224210F603D836748e7dC0088', // kovan
     }

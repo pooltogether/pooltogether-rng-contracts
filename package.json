@@ -1,7 +1,7 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "1.0.0-alpha.8",
+  "version": "1.0.0-alpha.9",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
   "main": "index.js",
@@ -23,7 +23,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@chainlink/contracts": "^0.0.5",
+    "@chainlink/contracts": "^0.0.10",
     "@chainlink/test-helpers": "^0.0.4",
     "@nomiclabs/buidler": "^1.4.3",
     "@nomiclabs/buidler-ethers": "^2.0.0",
