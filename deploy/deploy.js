@@ -41,7 +41,7 @@ module.exports = async (buidler) => {
   
   debug("\n  Using Contracts:")
   debug("  - VRF:  ", vrfCoordinator)
-  debug("  - LINK: ", linkAddress)
+  debug("  - LINK: ", linkToken)
   debug(" ")
 
   // Blockhash RNG

@@ -39,8 +39,7 @@ module.exports = {
       allowUnlimitedContractSize: true
     },
     localhost: {
-      url: 'http://127.0.0.1:8545',
-      blockGasLimit: 200000000
+      url: 'http://127.0.0.1:8545'
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
