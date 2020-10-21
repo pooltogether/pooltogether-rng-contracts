@@ -43,7 +43,6 @@ module.exports = {
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      gasPrice: 10e9,
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC,
         initialIndex: 0,
@@ -52,7 +51,6 @@ module.exports = {
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      gasPrice: 10e9,
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC,
         initialIndex: 0,
@@ -61,7 +59,14 @@ module.exports = {
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      gasPrice: 10e9,
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC,
+        initialIndex: 0,
+        count: 3,
+      }
+    },
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC,
         initialIndex: 0,
