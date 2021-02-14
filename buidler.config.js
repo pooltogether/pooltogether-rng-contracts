@@ -72,6 +72,20 @@ module.exports = {
         initialIndex: 0,
         count: 3,
       }
+    },
+    poaMainnet: {
+      chainId: 99,
+      url: 'https://core.poanetwork.dev',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
+    },
+    poaSokol: {
+      chainId: 77,
+      url: 'https://sokol.poa.network',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
     }
   },
   gasReporter: {
