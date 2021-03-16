@@ -65,7 +65,7 @@ module.exports = async (buidler) => {
     RNGChainlink = await _getContract('RNGChainlink', [vrfCoordinator, linkAddress])
 
     debug("\n  Initializing RNGChainlink:")
-    debug("  - fee:  ", feeValue)
+    debug("  - fee:  ", feeValue.toString())
     debug("  - keyHash:  ", keyHashValue)
     debug(" ")
     await RNGChainlink.setFee(feeValue)
