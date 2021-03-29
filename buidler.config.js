@@ -100,6 +100,20 @@ module.exports = {
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC
       }
+    },
+    bsc: {
+      chainId: 56,
+      url: 'https://bsc-dataseed.binance.org',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
+    },
+    bscTestnet: {
+      chainId: 97,
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
     }
   },
   gasReporter: {
