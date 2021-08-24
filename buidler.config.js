@@ -114,6 +114,20 @@ module.exports = {
       accounts: {
         mnemonic: process.env.HDWALLET_MNEMONIC
       }
+    },
+    celo: {
+      chainId: 42220,
+      url: 'https://forno.celo.org',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
+    },
+    celoTestnet: {
+      chainId: 44787,
+      url: 'https://alfajores-forno.celo-testnet.org',
+      accounts: {
+        mnemonic: process.env.HDWALLET_MNEMONIC
+      }
     }
   },
   gasReporter: {
