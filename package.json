@@ -17,6 +17,8 @@
     "deploy": "hardhat deploy --write true --network",
     "clean": "rm -rf build cache",
     "clean-test": "rm -rf deployments/hardhatevm_31337 test-results.xml",
+    "format": "prettier --config .prettierrc --write \"**/*.*.{ts,js}\" \"contracts/**/*.sol\"",
+    "format:file": "prettier --config .prettierrc --write",
     "prepack": "rm -rf build cache && hardhat compile",
     "etherscan-verify": "hardhat etherscan-verify --solc-input --api-key $ETHERSCAN_API_KEY --network",
     "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
@@ -41,6 +43,8 @@
     "hardhat-deploy-ethers": "0.3.0-beta.13",
     "hardhat-gas-reporter": "1.0.7",
     "mocha-junit-reporter": "2.0.2",
+    "prettier": "2.5.1",
+    "prettier-plugin-solidity": "1.0.0-beta.19",
     "solc": "0.8.11",
     "solhint": "3.3.6",
     "solidity-coverage": "0.7.18",
