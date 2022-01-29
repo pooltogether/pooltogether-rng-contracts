@@ -23,7 +23,9 @@
     "etherscan-verify": "hardhat etherscan-verify --solc-input --api-key $ETHERSCAN_API_KEY --network",
     "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@pooltogether/owner-manager-contracts": "1.1.0"
+  },
   "devDependencies": {
     "@chainlink/contracts": "0.3.1",
     "@chainlink/test-helpers": "0.0.6",

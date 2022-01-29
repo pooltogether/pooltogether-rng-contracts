@@ -5,11 +5,11 @@ pragma solidity 0.8.6;
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBaseV2.sol";
-import "@pooltogether/owner-manager-contracts/contracts/Ownable.sol";
+import "@pooltogether/owner-manager-contracts/contracts/Manageable.sol";
 
-import "./interfaces/RNGChainlinkInterface.sol";
+import "./interfaces/RNGChainlinkV2Interface.sol";
 
-contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
+contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageable {
   /* ============ Global Variables ============ */
 
   /// @dev Reference to the VRFCoordinatorV2 deployed contract
@@ -46,10 +46,12 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
 
   /**
    * @notice Chainlink VRF request configuration to request random numbers
-   * TODO: Complete documentation
-   * @param subId Subscription id
-   * @param callbackGasLimit
-   * @param requestConfirmations
+   * @param subId Chainlink VRF subscription id
+   * @param callbackGasLimit How much gas you would like in your callback to do work with the random words provided.
+   * Must be less than the coordinators `maxGasLimit`.
+   * @param requestConfirmations How many confirmations the Chainlink node should wait before responding.
+   * The longer the node waits the more secure the random value is.
+   * Must be greater than the coordinator's `minimumRequestBlockConfirmations`.
    * @param numWords Number of random values to receive
    * @param keyHash Hash of the public key used to verify the VRF proof
    */
@@ -75,45 +77,51 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
    */
   event VrfCoordinatorSet(VRFCoordinatorV2Interface indexed vrfCoordinator);
 
-  /**
-   * @notice Emitted when LINK tokens have been withdrawn from the contract
-   * @param amount The amount of LINK tokens that was withdrawn
-   * @param recipient The address that received the LINK tokens
-   */
-  event LinkWithdrawn(uint256 amount, address indexed recipient);
-
-  /**
-   * @notice Emitted when the Chainlink VRF subscription has been topped up
-   * @param amount The amount of LINK that was added to the subscription
-   * @param sender The address that sent the LINK tokens
-   */
-  event SubscriptionToppedUp(uint256 amount, address indexed sender);
-
   /* ============ Constructor ============ */
 
-  /// @dev Public constructor
+  /**
+   * @notice Constructor of the contract
+   * @param _owner Owner of the contract
+   * @param vrfCoordinator_ Address of the VRF Coordinator
+   * @param linkToken_ Address of the LINK token contract
+   * @param _subscriptionId Chainlink VRF subscription id
+   * @param _callbackGasLimit How much gas you would like in your callback to do work with the random words provided.
+   * Must be less than the coordinators `maxGasLimit`.
+   * @param _requestConfirmations How many confirmations the Chainlink node should wait before responding.
+   * The longer the node waits the more secure the random value is.
+   * Must be greater than the coordinator's `minimumRequestBlockConfirmations`.
+   * @param _numWords Number of random values to receive
+   * @param _keyHash Hash of the public key used to verify the VRF proof
+   */
   constructor(
     address _owner,
     address vrfCoordinator_,
     address linkToken_,
+    uint64 _subscriptionId,
     uint32 _callbackGasLimit,
     uint16 _requestConfirmations,
     uint32 _numWords,
     bytes32 _keyHash
   ) Ownable(_owner) VRFConsumerBaseV2(vrfCoordinator_) {
+    require(vrfCoordinator_ != address(0), "RNGChainLink/vrf-not-zero-addr");
+    require(linkToken_ != address(0), "RNGChainLink/link-not-zero-addr");
+    require(_subscriptionId > 0, "RNGChainLink/subId-gt-zero");
+    require(_callbackGasLimit > 0, "RNGChainLink/gas-limit-gt-zero");
+    require(_requestConfirmations > 0, "RNGChainLink/request-gt-zero");
+    require(_numWords > 0, "RNGChainLink/numWords-gt-zero");
+    require(_keyHash != bytes32(0), "RNGChainLink/keyHash-not-zero");
+
     _vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator_);
     _linkToken = LinkTokenInterface(linkToken_);
     keyHash = _keyHash;
 
     sRequestConfig = RequestConfig({
-      subId: 0, // Unset initially, will be set by subscribe()
+      subId: _subscriptionId,
       callbackGasLimit: _callbackGasLimit,
       requestConfirmations: _requestConfirmations,
       numWords: _numWords,
       keyHash: _keyHash
     });
-
-    subscribe();
 
     emit KeyHashSet(_keyHash);
     emit VrfCoordinatorSet(_vrfCoordinator);
@@ -121,23 +129,8 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
 
   /* ============ External Functions ============ */
 
-  /// @inheritdoc RNGChainlinkInterface
-  function subscribe() public override onlyOwner {
-    address[] memory consumers = new address[](1);
-    consumers[0] = address(this);
-
-    sRequestConfig.subId = _vrfCoordinator.createSubscription();
-    _vrfCoordinator.addConsumer(sRequestConfig.subId, consumers[0]);
-  }
-
-  /// @inheritdoc RNGChainlinkInterface
-  function unsubscribe(address _to) external override onlyOwner {
-    _vrfCoordinator.cancelSubscription(sRequestConfig.subId, _to);
-    sRequestConfig.subId = 0;
-  }
-
   /// @inheritdoc RNGInterface
-  function requestRandomNumber() external override returns (uint256 requestId, uint256 lockBlock) {
+  function requestRandomNumber() external override onlyManager returns (uint256 requestId, uint256 lockBlock) {
     lockBlock = block.number;
 
     _requestRandomWords(sRequestConfig);
@@ -146,47 +139,6 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
     requestLockBlock[requestId] = lockBlock;
 
     emit RandomNumberRequested(requestId, msg.sender);
-  }
-
-  /// @inheritdoc RNGChainlinkInterface
-  function requestRandomWords() external override onlyOwner {
-    RequestConfig memory _requestConfig = sRequestConfig;
-    _requestRandomWords(_requestConfig);
-  }
-
-  /// @inheritdoc RNGChainlinkInterface
-  function fundAndRequestRandomWords(uint256 _amount) external override onlyOwner {
-    RequestConfig memory _requestConfig = sRequestConfig;
-
-    _linkToken.transferAndCall(address(_vrfCoordinator), _amount, abi.encode(_requestConfig.subId));
-    _requestRandomWords(_requestConfig);
-  }
-
-  /// @inheritdoc RNGChainlinkInterface
-  function topUpSubscription(uint256 _amount) external override {
-    _requireAmountGreaterThanZero(_amount);
-
-    uint256 _linkBalance = _linkToken.balanceOf(address(this));
-
-    if (_linkToken.balanceOf(address(this)) == 0 || _linkBalance < _amount) {
-      uint256 _transferAmount = _linkBalance < _amount ? (_amount - _linkBalance) : _amount;
-
-      _linkToken.transferFrom(msg.sender, address(this), _transferAmount);
-    }
-
-    _linkToken.transferAndCall(address(_vrfCoordinator), _amount, abi.encode(sRequestConfig.subId));
-
-    emit SubscriptionToppedUp(_amount, msg.sender);
-  }
-
-  /// @inheritdoc RNGChainlinkInterface
-  function withdrawLink(uint256 _amount, address _to) external override onlyOwner {
-    require(_to != address(0), "RNGChainLink/to-not-zero-address");
-    _requireAmountGreaterThanZero(_amount);
-
-    _linkToken.transfer(_to, _amount);
-
-    emit LinkWithdrawn(_amount, _to);
   }
 
   /// @inheritdoc RNGInterface
@@ -204,17 +156,17 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
     return requestCounter;
   }
 
-  /// @inheritdoc RNGChainlinkInterface
+  /// @inheritdoc RNGChainlinkV2Interface
   function getLink() external view override returns (address) {
     return address(_linkToken);
   }
 
-  /// @inheritdoc RNGChainlinkInterface
+  /// @inheritdoc RNGChainlinkV2Interface
   function getSubscriptionId() public view override returns (uint64) {
     return sRequestConfig.subId;
   }
 
-  /// @inheritdoc RNGChainlinkInterface
+  /// @inheritdoc RNGChainlinkV2Interface
   function setKeyhash(bytes32 _keyhash) external override onlyOwner {
     sRequestConfig.keyHash = _keyhash;
 
@@ -257,14 +209,5 @@ contract RNGChainlink is RNGChainlinkInterface, VRFConsumerBaseV2, Ownable {
     chainlinkRequestIds[_vrfRequestId] = requestCounter;
 
     emit RandomNumberRequested(requestCounter++, msg.sender);
-  }
-
-  /**
-   * @notice Require amount greater than 0.
-   * @dev Reverts if amount is less than or equal to 0.
-   * @param _amount The amount to be checked
-   */
-  function _requireAmountGreaterThanZero(uint256 _amount) internal pure {
-    require(_amount > 0, "RNGChainLink/amount-gt-zero");
   }
 }

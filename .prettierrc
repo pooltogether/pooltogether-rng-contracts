@@ -1,14 +1,14 @@
 {
   "printWidth": 100,
   "tabWidth": 2,
-  "singleQuote": true,
   "overrides": [
     {
       "files": "*.*.{ts,js}",
       "options": {
         "parser": "typescript",
         "trailingComma": "all",
-        "arrowParens": "always"
+        "arrowParens": "always",
+        "singleQuote": true
       }
     },
     {
