@@ -8,10 +8,10 @@ contract RNGBlockhashHarness is RNGBlockhash {
   uint256 internal _seed;
 
   function setRequestCount(uint32 _requestCount) external {
-    requestCounter = _requestCount;
+    requestCount = _requestCount;
   }
 
-  function setRandomNumber(uint32 requestId, uint256 rand) external {
+  function setRandomNumber(uint256 requestId, uint256 rand) external {
     randomNumbers[requestId] = rand;
   }
 

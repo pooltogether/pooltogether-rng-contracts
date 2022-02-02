@@ -1,6 +1,7 @@
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import 'hardhat-abi-exporter';
+import 'hardhat-dependency-compiler';
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
 import 'hardhat-gas-reporter';
@@ -9,6 +10,8 @@ import 'solidity-coverage';
 import networks from './hardhat.network';
 import { HardhatUserConfig } from 'hardhat/config';
 
+const optimizerEnabled = !process.env.OPTIMIZER_DISABLED;
+
 const config: HardhatUserConfig = {
   abiExporter: {
     path: './abis',
@@ -16,14 +19,58 @@ const config: HardhatUserConfig = {
     flat: true,
   },
   solidity: {
-    version: '0.8.6',
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 2000,
+    compilers: [
+      {
+        version: '0.8.6',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 2000,
+          },
+          evmVersion: 'berlin',
+        },
       },
-      evmVersion: 'berlin',
-    },
+      {
+        version: '0.6.6',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 2000,
+          },
+          evmVersion: 'istanbul',
+        },
+      },
+      {
+        version: '0.4.8',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 2000,
+          },
+          evmVersion: 'homestead',
+        },
+      },
+      {
+        version: '0.4.11',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 2000,
+          },
+          evmVersion: 'homestead',
+        },
+      },
+      {
+        version: '0.4.24',
+        settings: {
+          optimizer: {
+            enabled: optimizerEnabled,
+            runs: 2000,
+          },
+          evmVersion: 'homestead',
+        },
+      },
+    ],
   },
   networks,
   gasReporter: {
@@ -49,6 +96,13 @@ const config: HardhatUserConfig = {
       137: '0xb0897686c545045aFc77CF20eC7A532E3120E0F1', // matic / polygon
       80001: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB', // mumbai
     },
+  },
+  dependencyCompiler: {
+    paths: [
+      '@chainlink/contracts/src/v0.4/LinkToken.sol',
+      '@chainlink/contracts/src/v0.6/tests/BlockhashStoreTestHelper.sol',
+      '@chainlink/contracts/src/v0.8/dev/VRFCoordinatorV2.sol',
+    ],
   },
 };
 

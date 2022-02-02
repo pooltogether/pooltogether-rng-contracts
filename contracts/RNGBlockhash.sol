@@ -11,7 +11,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   using SafeCast for uint256;
 
   /// @dev A counter for the number of requests made used for request ids
-  uint256 internal requestCounter;
+  uint256 internal requestCount;
 
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint256 => uint256) internal randomNumbers;
@@ -22,7 +22,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @notice Gets the last request id used by the RNG service
   /// @return requestId The last request id used in the last request
   function getLastRequestId() external view override returns (uint256 requestId) {
-    return requestCounter;
+    return requestCount;
   }
 
   /// @notice Sends a request for a random number to the 3rd-party service
@@ -82,8 +82,8 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev Gets the next consecutive request ID to be used
   /// @return requestId The ID to be used for the next request
   function _getNextRequestId() internal returns (uint256 requestId) {
-    requestCounter = requestCounter++;
-    requestId = requestCounter;
+    requestCount++;
+    requestId = requestCount;
   }
 
   /// @dev Gets a seed for a random number from the latest available blockhash
