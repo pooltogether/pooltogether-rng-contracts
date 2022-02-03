@@ -13,6 +13,17 @@ contract RNGServiceStub is RNGInterface {
     return 1;
   }
 
+  function setRequestFee(address _feeToken, uint256 _requestFee) external {
+    feeToken = _feeToken;
+    requestFee = _requestFee;
+  }
+
+  /// @return _feeToken
+  /// @return _requestFee
+  function getRequestFee() external view returns (address _feeToken, uint256 _requestFee) {
+    return (feeToken, requestFee);
+  }
+
   function setRandomNumber(uint256 _random) external {
     random = _random;
   }
