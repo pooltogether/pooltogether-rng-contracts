@@ -2,7 +2,6 @@
 
 pragma solidity 0.8.6;
 
-import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBaseV2.sol";
 import "@pooltogether/owner-manager-contracts/contracts/Manageable.sol";
@@ -13,13 +12,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   /* ============ Global Variables ============ */
 
   /// @dev Reference to the VRFCoordinatorV2 deployed contract
-  VRFCoordinatorV2Interface private _vrfCoordinator;
-
-  /// @dev Reference to the LINK token contract.
-  LinkTokenInterface private immutable _linkToken;
-
-  /// @dev The keyhash used by the Chainlink VRF
-  bytes32 public keyHash;
+  VRFCoordinatorV2Interface internal _vrfCoordinator;
 
   /// @dev A counter for the number of requests made used for request ids
   uint256 public requestCounter;
@@ -35,9 +28,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
 
   /// @notice Chainlink VRF subscription request configuration
   RequestConfig public sRequestConfig;
-
-  /// @notice Chainlink VRF subscription random words
-  uint256[] public sRandomWords;
 
   /// @notice Chainlink VRF subscription request id
   uint256 public sRequestId;
@@ -72,6 +62,12 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   event KeyHashSet(bytes32 keyHash);
 
   /**
+   * @notice Emmited when the Chainlink VRF request configuration is set
+   * @param sRequestConfig Chainlink VRF request configuration
+   */
+  event RequestConfigSet(RequestConfig sRequestConfig);
+
+  /**
    * @notice Emmited when the Chainlink VRF Coordinator address is set
    * @param vrfCoordinator Address of the VRF Coordinator
    */
@@ -83,7 +79,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Constructor of the contract
    * @param _owner Owner of the contract
    * @param vrfCoordinator_ Address of the VRF Coordinator
-   * @param linkToken_ Address of the LINK token contract
    * @param _subscriptionId Chainlink VRF subscription id
    * @param _callbackGasLimit How much gas you would like in your callback to do work with the random words provided.
    * Must be less than the coordinators `maxGasLimit`.
@@ -96,7 +91,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   constructor(
     address _owner,
     address vrfCoordinator_,
-    address linkToken_,
     uint64 _subscriptionId,
     uint32 _callbackGasLimit,
     uint16 _requestConfirmations,
@@ -104,18 +98,15 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     bytes32 _keyHash
   ) Ownable(_owner) VRFConsumerBaseV2(vrfCoordinator_) {
     require(vrfCoordinator_ != address(0), "RNGChainLink/vrf-not-zero-addr");
-    require(linkToken_ != address(0), "RNGChainLink/link-not-zero-addr");
     require(_subscriptionId > 0, "RNGChainLink/subId-gt-zero");
     require(_callbackGasLimit > 0, "RNGChainLink/gas-limit-gt-zero");
-    require(_requestConfirmations > 0, "RNGChainLink/request-gt-zero");
+    require(_requestConfirmations > 0, "RNGChainLink/requestConf-gt-zero");
     require(_numWords > 0, "RNGChainLink/numWords-gt-zero");
     require(_keyHash != bytes32(0), "RNGChainLink/keyHash-not-zero");
 
     _vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator_);
-    _linkToken = LinkTokenInterface(linkToken_);
-    keyHash = _keyHash;
 
-    sRequestConfig = RequestConfig({
+    RequestConfig memory _sRequestConfig = RequestConfig({
       subId: _subscriptionId,
       callbackGasLimit: _callbackGasLimit,
       requestConfirmations: _requestConfirmations,
@@ -123,32 +114,61 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
       keyHash: _keyHash
     });
 
-    emit KeyHashSet(_keyHash);
+    sRequestConfig = _sRequestConfig;
+
     emit VrfCoordinatorSet(_vrfCoordinator);
+    emit RequestConfigSet(_sRequestConfig);
   }
 
   /* ============ External Functions ============ */
 
   /// @inheritdoc RNGInterface
-  function requestRandomNumber() external override onlyManager returns (uint256 requestId, uint256 lockBlock) {
+  function requestRandomNumber()
+    external
+    override
+    onlyManager
+    returns (uint256 requestId, uint256 lockBlock)
+  {
+    RequestConfig memory _requestConfig = sRequestConfig;
+
+    uint256 _vrfRequestId = _vrfCoordinator.requestRandomWords(
+      _requestConfig.keyHash,
+      _requestConfig.subId,
+      _requestConfig.requestConfirmations,
+      _requestConfig.callbackGasLimit,
+      _requestConfig.numWords
+    );
+
+    sRequestId = _vrfRequestId;
+    requestId = _vrfRequestId;
     lockBlock = block.number;
 
-    _requestRandomWords(sRequestConfig);
+    uint256 _requestCounter = requestCounter++;
 
-    requestId = sRequestId;
-    requestLockBlock[requestId] = lockBlock;
+    requestLockBlock[_vrfRequestId] = lockBlock;
+    chainlinkRequestIds[_vrfRequestId] = _requestCounter;
 
-    emit RandomNumberRequested(requestId, msg.sender);
+    emit RandomNumberRequested(_vrfRequestId, msg.sender);
   }
 
   /// @inheritdoc RNGInterface
-  function isRequestComplete(uint256 requestId) external view override returns (bool isCompleted) {
-    return randomNumbers[requestId] != 0;
+  function isRequestComplete(uint256 _internalRequestId)
+    external
+    view
+    override
+    returns (bool isCompleted)
+  {
+    return randomNumbers[_internalRequestId] != 0;
   }
 
   /// @inheritdoc RNGInterface
-  function randomNumber(uint256 requestId) external view override returns (uint256 randomNum) {
-    return randomNumbers[requestId];
+  function randomNumber(uint256 _internalRequestId)
+    external
+    view
+    override
+    returns (uint256 randomNum)
+  {
+    return randomNumbers[_internalRequestId];
   }
 
   /// @inheritdoc RNGInterface
@@ -157,13 +177,13 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   }
 
   /// @inheritdoc RNGChainlinkV2Interface
-  function getLink() external view override returns (address) {
-    return address(_linkToken);
+  function getSubscriptionId() external view override returns (uint64) {
+    return sRequestConfig.subId;
   }
 
   /// @inheritdoc RNGChainlinkV2Interface
-  function getSubscriptionId() public view override returns (uint64) {
-    return sRequestConfig.subId;
+  function getVrfCoordinator() external view override returns (address) {
+    return address(_vrfCoordinator);
   }
 
   /// @inheritdoc RNGChainlinkV2Interface
@@ -181,7 +201,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    */
   function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
     require(_requestId == sRequestId, "RNGChainLink/requestId-incorrect");
-    sRandomWords = _randomWords;
 
     uint256 _internalRequestId = chainlinkRequestIds[_requestId];
     uint256 _randomNumber = _randomWords[0];
@@ -189,25 +208,5 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     randomNumbers[_internalRequestId] = _randomNumber;
 
     emit RandomNumberCompleted(_internalRequestId, _randomNumber);
-  }
-
-  /**
-   * @notice Requests new random words from the Chainlink VRF.
-   * @dev The result of the request is returned in the function `fulfillRandomWords`.
-   * @dev Will revert if subscription is not set and/or funded.
-   */
-  function _requestRandomWords(RequestConfig memory _requestConfig) internal {
-    uint256 _vrfRequestId = _vrfCoordinator.requestRandomWords(
-      _requestConfig.keyHash,
-      _requestConfig.subId,
-      _requestConfig.requestConfirmations,
-      _requestConfig.callbackGasLimit,
-      _requestConfig.numWords
-    );
-
-    sRequestId = _vrfRequestId;
-    chainlinkRequestIds[_vrfRequestId] = requestCounter;
-
-    emit RandomNumberRequested(requestCounter++, msg.sender);
   }
 }
