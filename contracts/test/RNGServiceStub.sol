@@ -9,7 +9,7 @@ contract RNGServiceStub is RNGInterface {
   address internal feeToken;
   uint256 internal requestFee;
 
-  function getLastRequestId() external pure override returns (uint256 requestId) {
+  function getLastRequestId() external pure override returns (uint32 requestId) {
     return 1;
   }
 
@@ -20,7 +20,7 @@ contract RNGServiceStub is RNGInterface {
 
   /// @return _feeToken
   /// @return _requestFee
-  function getRequestFee() external view returns (address _feeToken, uint256 _requestFee) {
+  function getRequestFee() external view override returns (address _feeToken, uint256 _requestFee) {
     return (feeToken, requestFee);
   }
 
@@ -28,15 +28,15 @@ contract RNGServiceStub is RNGInterface {
     random = _random;
   }
 
-  function requestRandomNumber() external pure override returns (uint256, uint256) {
+  function requestRandomNumber() external pure override returns (uint32, uint32) {
     return (1, 1);
   }
 
-  function isRequestComplete(uint256) external pure override returns (bool) {
+  function isRequestComplete(uint32) external pure override returns (bool) {
     return true;
   }
 
-  function randomNumber(uint256) external view override returns (uint256) {
+  function randomNumber(uint32) external view override returns (uint256) {
     return random;
   }
 }

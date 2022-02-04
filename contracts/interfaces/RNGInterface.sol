@@ -25,7 +25,14 @@ interface RNGInterface {
    * @notice Gets the last request id used by the RNG service
    * @return requestId The last request id used in the last request
    */
-  function getLastRequestId() external view returns (uint256 requestId);
+  function getLastRequestId() external view returns (uint32 requestId);
+
+  /**
+   * @notice Gets the Fee for making a Request against an RNG service
+   * @return feeToken The address of the token that is used to pay fees
+   * @return requestFee The fee required to be paid to make a request
+   */
+  function getRequestFee() external view returns (address feeToken, uint256 requestFee);
 
   /**
    * @notice Sends a request for a random number to the 3rd-party service
@@ -35,7 +42,7 @@ interface RNGInterface {
    * @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.
    * The calling contract should "lock" all activity until the result is available via the `requestId`
    */
-  function requestRandomNumber() external returns (uint256 requestId, uint256 lockBlock);
+  function requestRandomNumber() external returns (uint32 requestId, uint32 lockBlock);
 
   /**
    * @notice Checks if the request for randomness from the 3rd-party service has completed
@@ -43,12 +50,12 @@ interface RNGInterface {
    * @param requestId The ID of the request used to get the results of the RNG service
    * @return isCompleted True if the request has completed and a random number is available, false otherwise
    */
-  function isRequestComplete(uint256 requestId) external view returns (bool isCompleted);
+  function isRequestComplete(uint32 requestId) external view returns (bool isCompleted);
 
   /**
    * @notice Gets the random number produced by the 3rd-party service
    * @param requestId The ID of the request used to get the results of the RNG service
    * @return randomNum The random number
    */
-  function randomNumber(uint256 requestId) external returns (uint256 randomNum);
+  function randomNumber(uint32 requestId) external returns (uint256 randomNum);
 }

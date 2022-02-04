@@ -25,7 +25,7 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
     )
   {}
 
-  function getInternalRequestId(uint256 _requestId) external view returns (uint256) {
+  function getInternalRequestId(uint256 _requestId) external view returns (uint32) {
     return chainlinkRequestIds[_requestId];
   }
 
@@ -36,7 +36,7 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
     _vrfCoordinator.addConsumer(sRequestConfig.subId, consumers[0]);
   }
 
-  function setRequestCounter(uint256 _requestCounter) external {
+  function setRequestCounter(uint32 _requestCounter) external {
     requestCounter = _requestCounter;
   }
 

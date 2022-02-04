@@ -20,16 +20,16 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   uint256 public fee;
 
   /// @dev A counter for the number of requests made used for request ids
-  uint256 public requestCount;
+  uint32 public requestCount;
 
   /// @dev A list of random numbers from past requests mapped by request id
-  mapping(uint256 => uint256) internal randomNumbers;
+  mapping(uint32 => uint256) internal randomNumbers;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
-  mapping(uint256 => uint256) internal requestLockBlock;
+  mapping(uint32 => uint32) internal requestLockBlock;
 
   /// @dev A mapping from Chainlink request ids to internal request ids
-  mapping(bytes32 => uint256) internal chainlinkRequestIds;
+  mapping(bytes32 => uint32) internal chainlinkRequestIds;
 
   /// @dev Public constructor
   constructor(address _vrfCoordinator, address _link) VRFConsumerBase(_vrfCoordinator, _link) {
@@ -58,14 +58,14 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
 
   /// @notice Gets the last request id used by the RNG service
   /// @return requestId The last request id used in the last request
-  function getLastRequestId() external view override returns (uint256 requestId) {
+  function getLastRequestId() external view override returns (uint32 requestId) {
     return requestCount;
   }
 
   /// @notice Gets the Fee for making a Request against an RNG service
   /// @return feeToken The address of the token that is used to pay fees
   /// @return requestFee The fee required to be paid to make a request
-  function getRequestFee() external view returns (address feeToken, uint256 requestFee) {
+  function getRequestFee() external view override returns (address feeToken, uint256 requestFee) {
     return (address(LINK), fee);
   }
 
@@ -75,8 +75,8 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @return requestId The ID of the request used to get the results of the RNG service
   /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.  The calling contract
   /// should "lock" all activity until the result is available via the `requestId`
-  function requestRandomNumber() external override returns (uint256 requestId, uint256 lockBlock) {
-    lockBlock = block.number;
+  function requestRandomNumber() external override returns (uint32 requestId, uint32 lockBlock) {
+    lockBlock = uint32(block.number);
 
     // collect fee for payment
     require(LINK.transferFrom(msg.sender, address(this), fee), "RNGChainlink/fee-transfer-failed");
@@ -93,20 +93,20 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @dev For time-delayed requests, this function is used to check/confirm completion
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return isCompleted True if the request has completed and a random number is available, false otherwise
-  function isRequestComplete(uint256 requestId) external view override returns (bool isCompleted) {
+  function isRequestComplete(uint32 requestId) external view override returns (bool isCompleted) {
     return randomNumbers[requestId] != 0;
   }
 
   /// @notice Gets the random number produced by the 3rd-party service
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return randomNum The random number
-  function randomNumber(uint256 requestId) external view override returns (uint256 randomNum) {
+  function randomNumber(uint32 requestId) external view override returns (uint256 randomNum) {
     return randomNumbers[requestId];
   }
 
   /// @dev Requests a new random number from the Chainlink VRF
   /// @dev The result of the request is returned in the function `fulfillRandomness`
-  function _requestRandomness() internal returns (uint256 requestId) {
+  function _requestRandomness() internal returns (uint32 requestId) {
     // Get next request ID
     requestId = _getNextRequestId();
 
@@ -121,7 +121,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @dev The VRF Coordinator will only send this function verified responses.
   /// @dev The VRF Coordinator will not pass randomness that could not be verified.
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-    uint256 internalRequestId = chainlinkRequestIds[requestId];
+    uint32 internalRequestId = chainlinkRequestIds[requestId];
 
     // Store random value
     randomNumbers[internalRequestId] = randomness;
@@ -131,7 +131,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
 
   /// @dev Gets the next consecutive request ID to be used
   /// @return requestId The ID to be used for the next request
-  function _getNextRequestId() internal returns (uint256 requestId) {
+  function _getNextRequestId() internal returns (uint32 requestId) {
     requestCount++;
     requestId = requestCount;
   }

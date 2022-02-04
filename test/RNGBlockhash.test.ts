@@ -5,6 +5,7 @@ import { MockContract } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
 
 const { constants, getContractFactory, getSigners, provider } = ethers;
+const { AddressZero } = constants;
 
 import { increaseTime as increaseTimeHelper } from './helpers/increaseTime';
 
@@ -31,6 +32,14 @@ describe('RNGBlockhash contract', function () {
     it('should return the next unused request ID', async () => {
       await rng.setRequestCount(123);
       expect(await rng.getLastRequestId()).to.equal(123);
+    });
+  });
+
+  describe('getRequestFee()', () => {
+    it('should return the fee for a request', async () => {
+      const feeData = await rng.getRequestFee();
+      expect(feeData.feeToken).to.equal(AddressZero);
+      expect(feeData.requestFee).to.equal(0);
     });
   });
 

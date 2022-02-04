@@ -208,7 +208,7 @@ describe('RNGChainlinkV2 contract', function () {
       await rng.subscribe();
 
       const transaction = await rng.connect(manager).requestRandomNumber();
-      const requestId = await rng.callStatic.sRequestId();
+      const requestId = await rng.callStatic.getLastRequestId();
 
       await expect(transaction)
         .to.emit(rng, 'RandomNumberRequested')
@@ -226,7 +226,7 @@ describe('RNGChainlinkV2 contract', function () {
 
       await rng.connect(manager).requestRandomNumber();
 
-      expect(returnData['requestId']).to.equal(await rng.callStatic.sRequestId());
+      expect(returnData['requestId']).to.equal(await rng.callStatic.getLastRequestId());
       expect(returnData['lockBlock']).to.equal(blockNumber);
     });
 
@@ -293,6 +293,14 @@ describe('RNGChainlinkV2 contract', function () {
     it('should return the next unused request ID', async () => {
       await rng.setRequestCounter(123);
       expect(await rng.getLastRequestId()).to.equal(123);
+    });
+  });
+
+  describe('getRequestFee()', () => {
+    it('should return the fee for a request', async () => {
+      const feeData = await rng.getRequestFee();
+      expect(feeData.feeToken).to.equal(AddressZero);
+      expect(feeData.requestFee).to.equal(0);
     });
   });
 

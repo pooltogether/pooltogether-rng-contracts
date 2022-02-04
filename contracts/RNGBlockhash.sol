@@ -3,26 +3,30 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import "./interfaces/RNGInterface.sol";
 
 contract RNGBlockhash is RNGInterface, Ownable {
-  using SafeCast for uint256;
-
   /// @dev A counter for the number of requests made used for request ids
-  uint256 internal requestCount;
+  uint32 internal requestCount;
 
   /// @dev A list of random numbers from past requests mapped by request id
-  mapping(uint256 => uint256) internal randomNumbers;
+  mapping(uint32 => uint256) internal randomNumbers;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
-  mapping(uint256 => uint256) internal requestLockBlock;
+  mapping(uint32 => uint32) internal requestLockBlock;
 
   /// @notice Gets the last request id used by the RNG service
   /// @return requestId The last request id used in the last request
-  function getLastRequestId() external view override returns (uint256 requestId) {
+  function getLastRequestId() external view override returns (uint32 requestId) {
     return requestCount;
+  }
+
+  /// @notice Gets the Fee for making a Request against an RNG service
+  /// @return feeToken The address of the token that is used to pay fees
+  /// @return requestFee The fee required to be paid to make a request
+  function getRequestFee() external pure override returns (address feeToken, uint256 requestFee) {
+    return (address(0), 0);
   }
 
   /// @notice Sends a request for a random number to the 3rd-party service
@@ -35,10 +39,10 @@ contract RNGBlockhash is RNGInterface, Ownable {
     external
     virtual
     override
-    returns (uint256 requestId, uint256 lockBlock)
+    returns (uint32 requestId, uint32 lockBlock)
   {
     requestId = _getNextRequestId();
-    lockBlock = block.number;
+    lockBlock = uint32(block.number);
 
     requestLockBlock[requestId] = lockBlock;
 
@@ -49,7 +53,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev For time-delayed requests, this function is used to check/confirm completion
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return isCompleted True if the request has completed and a random number is available, false otherwise
-  function isRequestComplete(uint256 requestId)
+  function isRequestComplete(uint32 requestId)
     external
     view
     virtual
@@ -62,7 +66,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @notice Gets the random number produced by the 3rd-party service
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return randomNum The random number
-  function randomNumber(uint256 requestId) external virtual override returns (uint256 randomNum) {
+  function randomNumber(uint32 requestId) external virtual override returns (uint256 randomNum) {
     require(_isRequestComplete(requestId), "RNGBlockhash/request-incomplete");
 
     if (randomNumbers[requestId] == 0) {
@@ -75,13 +79,13 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev Checks if the request for randomness from the 3rd-party service has completed
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return True if the request has completed and a random number is available, false otherwise
-  function _isRequestComplete(uint256 requestId) internal view returns (bool) {
+  function _isRequestComplete(uint32 requestId) internal view returns (bool) {
     return block.number > (requestLockBlock[requestId] + 1);
   }
 
   /// @dev Gets the next consecutive request ID to be used
   /// @return requestId The ID to be used for the next request
-  function _getNextRequestId() internal returns (uint256 requestId) {
+  function _getNextRequestId() internal returns (uint32 requestId) {
     requestCount++;
     requestId = requestCount;
   }
@@ -95,7 +99,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev Stores the latest random number by request ID and logs the event
   /// @param requestId The ID of the request to store the random number
   /// @param result The random number for the request ID
-  function _storeResult(uint256 requestId, uint256 result) internal {
+  function _storeResult(uint32 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
 

@@ -15,16 +15,16 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   VRFCoordinatorV2Interface internal _vrfCoordinator;
 
   /// @dev A counter for the number of requests made used for request ids
-  uint256 public requestCounter;
+  uint32 public requestCounter;
 
   /// @dev A list of random numbers from past requests mapped by request id
-  mapping(uint256 => uint256) internal randomNumbers;
+  mapping(uint32 => uint256) internal randomNumbers;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
-  mapping(uint256 => uint256) internal requestLockBlock;
+  mapping(uint32 => uint32) internal requestLockBlock;
 
   /// @dev A mapping from Chainlink request ids to internal request ids
-  mapping(uint256 => uint256) internal chainlinkRequestIds;
+  mapping(uint256 => uint32) internal chainlinkRequestIds;
 
   /// @notice Chainlink VRF subscription request configuration
   RequestConfig public sRequestConfig;
@@ -127,7 +127,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     external
     override
     onlyManager
-    returns (uint256 requestId, uint256 lockBlock)
+    returns (uint32 requestId, uint32 lockBlock)
   {
     RequestConfig memory _requestConfig = sRequestConfig;
 
@@ -140,19 +140,21 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     );
 
     sRequestId = _vrfRequestId;
-    requestId = _vrfRequestId;
-    lockBlock = block.number;
 
-    uint256 _requestCounter = requestCounter++;
+    requestCounter++;
+    uint32 _requestCounter = requestCounter;
 
-    requestLockBlock[_vrfRequestId] = lockBlock;
+    requestId = _requestCounter;
     chainlinkRequestIds[_vrfRequestId] = _requestCounter;
 
-    emit RandomNumberRequested(_vrfRequestId, msg.sender);
+    lockBlock = uint32(block.number);
+    requestLockBlock[_requestCounter] = lockBlock;
+
+    emit RandomNumberRequested(_requestCounter, msg.sender);
   }
 
   /// @inheritdoc RNGInterface
-  function isRequestComplete(uint256 _internalRequestId)
+  function isRequestComplete(uint32 _internalRequestId)
     external
     view
     override
@@ -162,7 +164,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   }
 
   /// @inheritdoc RNGInterface
-  function randomNumber(uint256 _internalRequestId)
+  function randomNumber(uint32 _internalRequestId)
     external
     view
     override
@@ -172,8 +174,13 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   }
 
   /// @inheritdoc RNGInterface
-  function getLastRequestId() external view override returns (uint256 requestId) {
+  function getLastRequestId() external view override returns (uint32 requestId) {
     return requestCounter;
+  }
+
+  /// @inheritdoc RNGInterface
+  function getRequestFee() external pure override returns (address feeToken, uint256 requestFee) {
+    return (address(0), 0);
   }
 
   /// @inheritdoc RNGChainlinkV2Interface
@@ -202,7 +209,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
     require(_requestId == sRequestId, "RNGChainLink/requestId-incorrect");
 
-    uint256 _internalRequestId = chainlinkRequestIds[_requestId];
+    uint32 _internalRequestId = chainlinkRequestIds[_requestId];
     uint256 _randomNumber = _randomWords[0];
 
     randomNumbers[_internalRequestId] = _randomNumber;
