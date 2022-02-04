@@ -1,8 +1,9 @@
 # PoolTogether Prize Savings Protocol - RNG Service
 
-[![Coverage Status](https://coveralls.io/repos/github/pooltogether/rng-service/badge.svg?branch=master)](https://coveralls.io/github/pooltogether/rng-service?branch=master)
-
+![Tests](https://github.com/pooltogether/pooltogether-rng-contracts/actions/workflows/main.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/pooltogether/pooltogether-rng-contracts/badge.svg?branch=master)](https://coveralls.io/github/pooltogether/pooltogether-rng-contracts?branch=master)
 [![built-with openzeppelin](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://docs.openzeppelin.com/)
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
 
 The [PoolTogether](https://www.pooltogether.com/) Prize Savings Protocol Ethereum smart contracts.
 
