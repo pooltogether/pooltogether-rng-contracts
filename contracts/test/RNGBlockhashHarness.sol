@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.6.6;
+pragma solidity 0.8.6;
 
 import "../RNGBlockhash.sol";
 
 contract RNGBlockhashHarness is RNGBlockhash {
-
   uint256 internal _seed;
 
   function setRequestCount(uint32 _requestCount) external {
@@ -20,7 +19,7 @@ contract RNGBlockhashHarness is RNGBlockhash {
     _seed = seed;
   }
 
-  function _getSeed() internal override view returns (uint256 seed) {
+  function _getSeed() internal view override returns (uint256 seed) {
     return _seed;
   }
 }

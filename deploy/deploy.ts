@@ -1,23 +1,21 @@
-// using plugin: buidler-deploy
-// reference: https://buidler.dev/plugins/buidler-deploy.html
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-const {
+import {
   contractManager,
   chainName,
-} = require('../js-utils/deployHelpers')
+} from '../js-utils/deployHelpers';
 
-const VDFConfig = require('../vdf.config')
+import VDFConfig from '../vdf.config';
 
 const debug = require('debug')('deploy.js')
 
-module.exports = async (buidler) => {
-  const { ethers, getNamedAccounts, deployments } = buidler
+export default async (hardhat: HardhatRuntimeEnvironment) => {
+  const { ethers, getNamedAccounts, deployments } = hardhat
   const { deploy } = deployments
-  const _getContract = contractManager(buidler)
+  const _getContract = contractManager(hardhat)
   const network = await ethers.provider.getNetwork()
   const { chainId } = network
 
-  // Named accounts, defined in buidler.config.js:
   const {
     vrfCoordinator,
     linkToken
@@ -38,7 +36,7 @@ module.exports = async (buidler) => {
   debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
   debug("  Deploying to Network: ", chainName(chainId))
-  
+
   debug("\n  Using Contracts:")
   debug("  - VRF:  ", vrfCoordinator)
   debug("  - LINK: ", linkToken)
@@ -55,7 +53,7 @@ module.exports = async (buidler) => {
       debug("\n  Deploying LINK token...")
       const linkResult = await deploy('Link', {
         contract: 'ERC20Mintable',
-        from: deployerWallet._address,
+        from: deployerWallet.address,
         args: ['Chainlink Link', 'LINK']
       })
       linkAddress = linkResult.address

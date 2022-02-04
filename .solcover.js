@@ -1,7 +1,4 @@
 module.exports = {
   mocha: { reporter: 'mocha-junit-reporter' },
-  skipFiles: [
-    "test",
-    "external"
-  ]
+  skipFiles: ['test', 'external'],
 };

@@ -1,14 +1,15 @@
-pragma solidity ^0.6.6;
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity 0.8.6;
 
 import "../RNGInterface.sol";
 
 contract RNGServiceStub is RNGInterface {
-
   uint256 internal random;
   address internal feeToken;
   uint256 internal requestFee;
 
-  function getLastRequestId() external override view returns (uint32 requestId) {
+  function getLastRequestId() external pure override returns (uint32 requestId) {
     return 1;
   }
 
@@ -19,7 +20,7 @@ contract RNGServiceStub is RNGInterface {
 
   /// @return _feeToken
   /// @return _requestFee
-  function getRequestFee() external override view returns (address _feeToken, uint256 _requestFee) {
+  function getRequestFee() external view override returns (address _feeToken, uint256 _requestFee) {
     return (feeToken, requestFee);
   }
 
@@ -27,15 +28,15 @@ contract RNGServiceStub is RNGInterface {
     random = _random;
   }
 
-  function requestRandomNumber() external override returns (uint32, uint32) {
+  function requestRandomNumber() external pure override returns (uint32, uint32) {
     return (1, 1);
   }
 
-  function isRequestComplete(uint32) external override view returns (bool) {
+  function isRequestComplete(uint32) external pure override returns (bool) {
     return true;
   }
 
-  function randomNumber(uint32) external override returns (uint256) {
+  function randomNumber(uint32) external view override returns (uint256) {
     return random;
   }
 }

@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.6.6;
+pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/SafeCast.sol";
 
 import "./RNGInterface.sol";
 
 contract RNGBlockhash is RNGInterface, Ownable {
-  using SafeMath for uint256;
-  using SafeCast for uint256;
-
   /// @dev A counter for the number of requests made used for request ids
   uint32 internal requestCount;
 
@@ -21,19 +16,16 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
   mapping(uint32 => uint32) internal requestLockBlock;
 
-  /// @notice Public constructor
-  constructor() public { }
-
   /// @notice Gets the last request id used by the RNG service
   /// @return requestId The last request id used in the last request
-  function getLastRequestId() external override view returns (uint32 requestId) {
+  function getLastRequestId() external view override returns (uint32 requestId) {
     return requestCount;
   }
 
   /// @notice Gets the Fee for making a Request against an RNG service
   /// @return feeToken The address of the token that is used to pay fees
   /// @return requestFee The fee required to be paid to make a request
-  function getRequestFee() external override view returns (address feeToken, uint256 requestFee) {
+  function getRequestFee() external pure override returns (address feeToken, uint256 requestFee) {
     return (address(0), 0);
   }
 
@@ -43,7 +35,12 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @return requestId The ID of the request used to get the results of the RNG service
   /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.  The calling contract
   /// should "lock" all activity until the result is available via the `requestId`
-  function requestRandomNumber() external virtual override returns (uint32 requestId, uint32 lockBlock) {
+  function requestRandomNumber()
+    external
+    virtual
+    override
+    returns (uint32 requestId, uint32 lockBlock)
+  {
     requestId = _getNextRequestId();
     lockBlock = uint32(block.number);
 
@@ -56,7 +53,13 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev For time-delayed requests, this function is used to check/confirm completion
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return isCompleted True if the request has completed and a random number is available, false otherwise
-  function isRequestComplete(uint32 requestId) external virtual override view returns (bool isCompleted) {
+  function isRequestComplete(uint32 requestId)
+    external
+    view
+    virtual
+    override
+    returns (bool isCompleted)
+  {
     return _isRequestComplete(requestId);
   }
 
@@ -83,13 +86,13 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev Gets the next consecutive request ID to be used
   /// @return requestId The ID to be used for the next request
   function _getNextRequestId() internal returns (uint32 requestId) {
-    requestCount = uint256(requestCount).add(1).toUint32();
+    requestCount++;
     requestId = requestCount;
   }
 
   /// @dev Gets a seed for a random number from the latest available blockhash
   /// @return seed The seed to be used for generating a random number
-  function _getSeed() internal virtual view returns (uint256 seed) {
+  function _getSeed() internal view virtual returns (uint256 seed) {
     return uint256(blockhash(block.number - 1));
   }
 
