@@ -8,7 +8,7 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
   constructor(
     address _owner,
     address vrfCoordinator_,
-    uint64 _subscriptionId,
+    uint64 _subId,
     uint32 _callbackGasLimit,
     uint16 _requestConfirmations,
     uint32 _numWords,
@@ -17,7 +17,7 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
     RNGChainlinkV2(
       _owner,
       vrfCoordinator_,
-      _subscriptionId,
+      _subId,
       _callbackGasLimit,
       _requestConfirmations,
       _numWords,

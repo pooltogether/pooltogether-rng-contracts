@@ -56,6 +56,24 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   /* ============ Events ============ */
 
   /**
+   * @notice Emmited when the Chainlink VRF subscription id is set
+   * @param subId Chainlink VRF subscription id
+   */
+  event SubscriptionIdSet(uint64 subId);
+
+  /**
+   * @notice Emmited when the Chainlink VRF callback gas limit is set
+   * @param callbackGasLimit Chainlink VRF callback gas limit
+   */
+  event CallbackGasLimitSet(uint32 callbackGasLimit);
+
+  /**
+   * @notice Emmited when the Chainlink VRF request confirmations is set
+   * @param requestConfirmations Chainlink VRF request confirmations
+   */
+  event RequestConfirmationsSet(uint16 requestConfirmations);
+
+  /**
    * @notice Emmited when the Chainlink VRF keyHash is set
    * @param keyHash Chainlink VRF keyHash
    */
@@ -79,7 +97,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Constructor of the contract
    * @param _owner Owner of the contract
    * @param vrfCoordinator_ Address of the VRF Coordinator
-   * @param _subscriptionId Chainlink VRF subscription id
+   * @param _subId Chainlink VRF subscription id
    * @param _callbackGasLimit How much gas you would like in your callback to do work with the random words provided.
    * Must be less than the coordinators `maxGasLimit`.
    * @param _requestConfirmations How many confirmations the Chainlink node should wait before responding.
@@ -91,23 +109,23 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   constructor(
     address _owner,
     address vrfCoordinator_,
-    uint64 _subscriptionId,
+    uint64 _subId,
     uint32 _callbackGasLimit,
     uint16 _requestConfirmations,
     uint32 _numWords,
     bytes32 _keyHash
   ) Ownable(_owner) VRFConsumerBaseV2(vrfCoordinator_) {
     require(vrfCoordinator_ != address(0), "RNGChainLink/vrf-not-zero-addr");
-    require(_subscriptionId > 0, "RNGChainLink/subId-gt-zero");
-    require(_callbackGasLimit > 0, "RNGChainLink/gas-limit-gt-zero");
-    require(_requestConfirmations > 0, "RNGChainLink/requestConf-gt-zero");
+    _requireSubId(_subId);
+    _requireCallbackGasLimit(_callbackGasLimit);
+    _requireRequestConfirmations(_requestConfirmations);
     require(_numWords > 0, "RNGChainLink/numWords-gt-zero");
-    require(_keyHash != bytes32(0), "RNGChainLink/keyHash-not-zero");
+    _requireKeyhash(_keyHash);
 
     _vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator_);
 
     RequestConfig memory _sRequestConfig = RequestConfig({
-      subId: _subscriptionId,
+      subId: _subId,
       callbackGasLimit: _callbackGasLimit,
       requestConfirmations: _requestConfirmations,
       numWords: _numWords,
@@ -194,10 +212,35 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   }
 
   /// @inheritdoc RNGChainlinkV2Interface
-  function setKeyhash(bytes32 _keyhash) external override onlyOwner {
-    sRequestConfig.keyHash = _keyhash;
+  function setSubscriptionId(uint64 _subId) external override onlyOwner {
+    _requireSubId(_subId);
+    sRequestConfig.subId = _subId;
 
-    emit KeyHashSet(_keyhash);
+    emit SubscriptionIdSet(_subId);
+  }
+
+  /// @inheritdoc RNGChainlinkV2Interface
+  function setCallbackGasLimit(uint32 _callbackGasLimit) external override onlyOwner {
+    _requireCallbackGasLimit(_callbackGasLimit);
+    sRequestConfig.callbackGasLimit = _callbackGasLimit;
+
+    emit CallbackGasLimitSet(_callbackGasLimit);
+  }
+
+  /// @inheritdoc RNGChainlinkV2Interface
+  function setRequestConfirmations(uint16 _requestConfirmations) external override onlyOwner {
+    _requireRequestConfirmations(_requestConfirmations);
+    sRequestConfig.requestConfirmations = _requestConfirmations;
+
+    emit RequestConfirmationsSet(_requestConfirmations);
+  }
+
+  /// @inheritdoc RNGChainlinkV2Interface
+  function setKeyhash(bytes32 _keyHash) external override onlyOwner {
+    _requireKeyhash(_keyHash);
+    sRequestConfig.keyHash = _keyHash;
+
+    emit KeyHashSet(_keyHash);
   }
 
   /* ============ Internal Functions ============ */
@@ -215,5 +258,37 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     randomNumbers[_internalRequestId] = _randomNumber;
 
     emit RandomNumberCompleted(_internalRequestId, _randomNumber);
+  }
+
+  /**
+   * @notice Check that subscription id is greater than 0
+   * @param _subId Chainlink VRF subscription id
+   */
+  function _requireSubId(uint64 _subId) internal {
+    require(_subId > 0, "RNGChainLink/subId-gt-zero");
+  }
+
+  /**
+   * @notice Check that callback gas limit is greater than 0
+   * @param _callbackGasLimit Chainlink VRF callback gas limit
+   */
+  function _requireCallbackGasLimit(uint32 _callbackGasLimit) internal {
+    require(_callbackGasLimit > 0, "RNGChainLink/gas-limit-gt-zero");
+  }
+
+  /**
+   * @notice Check that request confirmations is greater than 0
+   * @param _requestConfirmations Chainlink VRF request confirmations
+   */
+  function _requireRequestConfirmations(uint16 _requestConfirmations) internal {
+    require(_requestConfirmations > 0, "RNGChainLink/requestConf-gt-zero");
+  }
+
+  /**
+   * @notice Check that keyHash is not an empty bytes32 string
+   * @param _keyHash Chainlink VRF keyHash
+   */
+  function _requireKeyhash(bytes32 _keyHash) internal {
+    require(_keyHash != bytes32(0), "RNGChainLink/keyHash-not-empty");
   }
 }

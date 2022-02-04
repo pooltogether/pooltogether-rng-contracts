@@ -22,8 +22,30 @@ interface RNGChainlinkV2Interface is RNGInterface {
   function getVrfCoordinator() external view returns (address);
 
   /**
-   * @notice Set Chainlink VRF keyhash.
-   * @param _keyhash The keyhash to be used by Chainlink VRF
+   * @notice Set Chainlink VRF subscription id associated with this contract.
+   * @dev This function is only callable by the owner.
+   * @param subId Chainlink VRF subscription id
    */
-  function setKeyhash(bytes32 _keyhash) external;
+  function setSubscriptionId(uint64 subId) external;
+
+  /**
+   * @notice Set Chainlink VRF callback gas limit.
+   * @dev This function is only callable by the owner.
+   * @param callbackGasLimit Chainlink VRF callback gas limit
+   */
+  function setCallbackGasLimit(uint32 callbackGasLimit) external;
+
+  /**
+   * @notice Set Chainlink VRF request confirmations.
+   * @dev This function is only callable by the owner.
+   * @param requestConfirmations Chainlink VRF request confirmations
+   */
+  function setRequestConfirmations(uint16 requestConfirmations) external;
+
+  /**
+   * @notice Set Chainlink VRF keyHash.
+   * @dev This function is only callable by the owner.
+   * @param keyHash Chainlink VRF keyHash
+   */
+  function setKeyhash(bytes32 keyHash) external;
 }

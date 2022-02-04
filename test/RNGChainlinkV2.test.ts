@@ -13,7 +13,7 @@ const debug = require('debug')('ptv3:RNGChainlink.test');
 type deployParametersType = {
   deployerAddress: string;
   vrfCoordinatorAddress: string;
-  subscriptionId: number;
+  subId: number;
   callbackGasLimit: number;
   requestConfirmations: number;
   numWords: number;
@@ -40,7 +40,7 @@ describe('RNGChainlinkV2 contract', function () {
   const deployRNGChainlinkV2 = async ({
     deployerAddress,
     vrfCoordinatorAddress,
-    subscriptionId,
+    subId,
     callbackGasLimit,
     requestConfirmations,
     numWords,
@@ -51,7 +51,7 @@ describe('RNGChainlinkV2 contract', function () {
     return await RNGFactory.deploy(
       deployerAddress,
       vrfCoordinatorAddress,
-      subscriptionId,
+      subId,
       callbackGasLimit,
       requestConfirmations,
       numWords,
@@ -98,7 +98,7 @@ describe('RNGChainlinkV2 contract', function () {
     deployParameters = {
       deployerAddress: deployer.address,
       vrfCoordinatorAddress: vrfCoordinator.address,
-      subscriptionId: 1,
+      subId: 1,
       callbackGasLimit: 1000000, // Value for testing, should be 1000000 for mainnet
       requestConfirmations: 3,
       numWords: 1,
@@ -127,7 +127,7 @@ describe('RNGChainlinkV2 contract', function () {
       const {
         deployerAddress,
         vrfCoordinatorAddress,
-        subscriptionId,
+        subId,
         callbackGasLimit,
         requestConfirmations,
         numWords,
@@ -147,7 +147,7 @@ describe('RNGChainlinkV2 contract', function () {
       expect(await rng.callStatic.owner()).to.equal(deployerAddress);
       expect(await rng.callStatic.getVrfCoordinator()).to.equal(vrfCoordinatorAddress);
 
-      expect(subscriptionRequestConfig.subId).to.equal(subscriptionId);
+      expect(subscriptionRequestConfig.subId).to.equal(subId);
       expect(subscriptionRequestConfig.callbackGasLimit).to.equal(callbackGasLimit);
       expect(subscriptionRequestConfig.requestConfirmations).to.equal(requestConfirmations);
       expect(subscriptionRequestConfig.numWords).to.equal(numWords);
@@ -162,8 +162,8 @@ describe('RNGChainlinkV2 contract', function () {
       );
     });
 
-    it('should fail to deploy RNGChainlinkV2 if subscriptionId is not greater than zero', async () => {
-      deployParameters.subscriptionId = 0;
+    it('should fail to deploy RNGChainlinkV2 if subId is not greater than zero', async () => {
+      deployParameters.subId = 0;
 
       await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
         'RNGChainLink/subId-gt-zero',
@@ -198,7 +198,7 @@ describe('RNGChainlinkV2 contract', function () {
       deployParameters.keyHash = formatBytes32String('');
 
       await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
-        'RNGChainLink/keyHash-not-zero',
+        'RNGChainLink/keyHash-not-empty',
       );
     });
   });
@@ -316,9 +316,84 @@ describe('RNGChainlinkV2 contract', function () {
     });
   });
 
+  describe('setSubscriptionId()', () => {
+    it('should succeed to set subscription id if owner', async () => {
+      const { subId } = deployParameters;
+      await expect(rng.setSubscriptionId(subId)).to.emit(rng, 'SubscriptionIdSet').withArgs(subId);
+    });
+
+    it('should fail to set subscription id if subId is not greater than zero', async () => {
+      deployParameters.subId = 0;
+
+      await expect(rng.setSubscriptionId(deployParameters.subId)).to.be.revertedWith(
+        'RNGChainLink/subId-gt-zero',
+      );
+    });
+
+    it('should fail to set subscription id if not owner', async () => {
+      await expect(
+        rng.connect(stranger).setSubscriptionId(deployParameters.subId),
+      ).to.be.revertedWith('Ownable/caller-not-owner');
+    });
+  });
+
+  describe('setCallbackGasLimit()', () => {
+    it('should succeed to set callbackGasLimit if owner', async () => {
+      const { callbackGasLimit } = deployParameters;
+      await expect(rng.setCallbackGasLimit(callbackGasLimit))
+        .to.emit(rng, 'CallbackGasLimitSet')
+        .withArgs(callbackGasLimit);
+    });
+
+    it('should fail to set callbackGasLimit if callbackGasLimit is not greater than zero', async () => {
+      deployParameters.callbackGasLimit = 0;
+
+      await expect(rng.setCallbackGasLimit(deployParameters.callbackGasLimit)).to.be.revertedWith(
+        'RNGChainLink/gas-limit-gt-zero',
+      );
+    });
+
+    it('should fail to set callbackGasLimit if not owner', async () => {
+      await expect(
+        rng.connect(stranger).setCallbackGasLimit(deployParameters.callbackGasLimit),
+      ).to.be.revertedWith('Ownable/caller-not-owner');
+    });
+  });
+
+  describe('setRequestConfirmations()', () => {
+    it('should succeed to set requestConfirmations if owner', async () => {
+      const { requestConfirmations } = deployParameters;
+      await expect(rng.setRequestConfirmations(requestConfirmations))
+        .to.emit(rng, 'RequestConfirmationsSet')
+        .withArgs(requestConfirmations);
+    });
+
+    it('should fail to set requestConfirmations if requestConfirmations is not greater than zero', async () => {
+      deployParameters.requestConfirmations = 0;
+
+      await expect(
+        rng.setRequestConfirmations(deployParameters.requestConfirmations),
+      ).to.be.revertedWith('RNGChainLink/requestConf-gt-zero');
+    });
+
+    it('should fail to set requestConfirmations if not owner', async () => {
+      await expect(
+        rng.connect(stranger).setRequestConfirmations(deployParameters.requestConfirmations),
+      ).to.be.revertedWith('Ownable/caller-not-owner');
+    });
+  });
+
   describe('setKeyhash()', () => {
     it('should succeed to set keyHash if owner', async () => {
       await expect(rng.setKeyhash(keyHash)).to.emit(rng, 'KeyHashSet').withArgs(keyHash);
+    });
+
+    it('should fail to set keyHash if keyHash is an empty bytes32 string', async () => {
+      deployParameters.keyHash = formatBytes32String('');
+
+      await expect(rng.setKeyhash(deployParameters.keyHash)).to.be.revertedWith(
+        'RNGChainLink/keyHash-not-empty',
+      );
     });
 
     it('should fail to set keyHash if not owner', async () => {
