@@ -6,7 +6,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBaseV2.sol";
 import "@pooltogether/owner-manager-contracts/contracts/Manageable.sol";
 
-import "./interfaces/RNGChainlinkV2Interface.sol";
+import "./RNGChainlinkV2Interface.sol";
 
 contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageable {
   /* ============ Global Variables ============ */

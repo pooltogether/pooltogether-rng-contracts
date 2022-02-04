@@ -4,7 +4,7 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interfaces/RNGInterface.sol";
+import "./RNGInterface.sol";
 
 contract RNGBlockhash is RNGInterface, Ownable {
   /// @dev A counter for the number of requests made used for request ids

@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.6;
 
-import "../interfaces/RNGInterface.sol";
+import "../RNGInterface.sol";
 
 contract RNGServiceStub is RNGInterface {
   uint256 internal random;

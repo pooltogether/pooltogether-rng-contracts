@@ -5,7 +5,7 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-import "./interfaces/RNGInterface.sol";
+import "./RNGInterface.sol";
 
 contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   event KeyHashSet(bytes32 keyHash);
