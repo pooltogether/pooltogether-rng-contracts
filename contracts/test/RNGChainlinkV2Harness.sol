@@ -25,10 +25,6 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
     )
   {}
 
-  function getInternalRequestId(uint256 _requestId) external view returns (uint32) {
-    return chainlinkRequestIds[_requestId];
-  }
-
   function subscribe() external {
     address[] memory consumers = new address[](1);
     consumers[0] = address(this);

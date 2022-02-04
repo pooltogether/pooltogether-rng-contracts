@@ -29,9 +29,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   /// @notice Chainlink VRF subscription request configuration
   RequestConfig public sRequestConfig;
 
-  /// @notice Chainlink VRF subscription request id
-  uint256 public sRequestId;
-
   /* ============ Structs ============ */
 
   /**
@@ -157,8 +154,6 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
       _requestConfig.numWords
     );
 
-    sRequestId = _vrfRequestId;
-
     requestCounter++;
     uint32 _requestCounter = requestCounter;
 
@@ -250,11 +245,10 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @dev The VRF Coordinator will only call it once it has verified the proof associated with the randomness.
    */
   function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-    require(_requestId == sRequestId, "RNGChainLink/requestId-incorrect");
-
     uint32 _internalRequestId = chainlinkRequestIds[_requestId];
-    uint256 _randomNumber = _randomWords[0];
+    require(_internalRequestId > 0, "RNGChainLink/requestId-incorrect");
 
+    uint256 _randomNumber = _randomWords[0];
     randomNumbers[_internalRequestId] = _randomNumber;
 
     emit RandomNumberCompleted(_internalRequestId, _randomNumber);

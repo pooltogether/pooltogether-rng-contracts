@@ -1,12 +1,16 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { Contract } from 'ethers';
+import { Contract, Transaction } from 'ethers';
 import { deployMockContract } from 'ethereum-waffle';
 import { artifacts, ethers } from 'hardhat';
 
 const { constants, getContractFactory, getSigners, provider, utils } = ethers;
 const { AddressZero } = constants;
 const { formatBytes32String } = utils;
+
+import { getEvents as getEventsHelper } from './helpers/getEvents';
+
+const getEvents = (tx: Transaction, contract: Contract) => getEventsHelper(provider, tx, contract);
 
 const debug = require('debug')('ptv3:RNGChainlink.test');
 
@@ -244,22 +248,31 @@ describe('RNGChainlinkV2 contract', function () {
   describe('fulfillRandomWords()', () => {
     it('should fulfill a random number request', async () => {
       await rng.subscribe();
-      await rng.connect(manager).requestRandomNumber();
 
-      const requestId = await rng.callStatic.sRequestId();
-      const internalRequestId = await rng.callStatic.getInternalRequestId(requestId);
+      const returnData = await rng.connect(manager).callStatic.requestRandomNumber();
+      const requestRandomNumberTransaction = await rng.connect(manager).requestRandomNumber();
 
-      expect(await rng.isRequestComplete(internalRequestId)).to.equal(false);
+      const events = await getEvents(requestRandomNumberTransaction, vrfCoordinator);
+      const event = events.find((event) => event && event.name === 'RandomWordsRequested');
 
-      const randomNumber = Math.floor(Math.random() * 1000);
-      const transaction = await rng.rawFulfillRandomWordsStub(requestId, [randomNumber]);
+      if (event) {
+        const requestId = event.args['requestId'];
+        const internalRequestId = returnData['requestId'];
 
-      expect(transaction)
-        .to.emit(rng, 'RandomNumberCompleted')
-        .withArgs(internalRequestId, randomNumber);
+        expect(await rng.isRequestComplete(internalRequestId)).to.equal(false);
 
-      expect(await rng.callStatic.isRequestComplete(internalRequestId)).to.equal(true);
-      expect(await rng.callStatic.randomNumber(internalRequestId)).to.equal(randomNumber);
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const fulfillRandomWordsTransaction = await rng.rawFulfillRandomWordsStub(requestId, [
+          randomNumber,
+        ]);
+
+        expect(fulfillRandomWordsTransaction)
+          .to.emit(rng, 'RandomNumberCompleted')
+          .withArgs(internalRequestId, randomNumber);
+
+        expect(await rng.callStatic.isRequestComplete(internalRequestId)).to.equal(true);
+        expect(await rng.callStatic.randomNumber(internalRequestId)).to.equal(randomNumber);
+      }
     });
 
     it('should fail to fulfill a random number request if requestId is incorrect', async () => {
@@ -277,15 +290,22 @@ describe('RNGChainlinkV2 contract', function () {
   describe('randomNumber()', () => {
     it('should return the latest generated random number', async () => {
       await rng.subscribe();
-      await rng.connect(manager).requestRandomNumber();
 
-      const requestId = await rng.callStatic.sRequestId();
-      const internalRequestId = await rng.callStatic.getInternalRequestId(requestId);
+      const returnData = await rng.connect(manager).callStatic.requestRandomNumber();
+      const requestRandomNumberTransaction = await rng.connect(manager).requestRandomNumber();
 
-      const randomNumber = Math.floor(Math.random() * 1000);
-      await rng.rawFulfillRandomWordsStub(requestId, [randomNumber]);
+      const events = await getEvents(requestRandomNumberTransaction, vrfCoordinator);
+      const event = events.find((event) => event && event.name === 'RandomWordsRequested');
 
-      expect(await rng.callStatic.randomNumber(internalRequestId)).to.equal(randomNumber);
+      if (event) {
+        const requestId = event.args['requestId'];
+        const internalRequestId = returnData['requestId'];
+
+        const randomNumber = Math.floor(Math.random() * 1000);
+        await rng.rawFulfillRandomWordsStub(requestId, [randomNumber]);
+
+        expect(await rng.callStatic.randomNumber(internalRequestId)).to.equal(randomNumber);
+      }
     });
   });
 
