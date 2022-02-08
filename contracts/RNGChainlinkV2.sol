@@ -258,7 +258,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Check that subscription id is greater than 0
    * @param _subId Chainlink VRF subscription id
    */
-  function _requireSubId(uint64 _subId) internal {
+  function _requireSubId(uint64 _subId) internal pure {
     require(_subId > 0, "RNGChainLink/subId-gt-zero");
   }
 
@@ -266,7 +266,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Check that callback gas limit is greater than 0
    * @param _callbackGasLimit Chainlink VRF callback gas limit
    */
-  function _requireCallbackGasLimit(uint32 _callbackGasLimit) internal {
+  function _requireCallbackGasLimit(uint32 _callbackGasLimit) internal pure {
     require(_callbackGasLimit > 0, "RNGChainLink/gas-limit-gt-zero");
   }
 
@@ -274,7 +274,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Check that request confirmations is greater than 0
    * @param _requestConfirmations Chainlink VRF request confirmations
    */
-  function _requireRequestConfirmations(uint16 _requestConfirmations) internal {
+  function _requireRequestConfirmations(uint16 _requestConfirmations) internal pure {
     require(_requestConfirmations > 0, "RNGChainLink/requestConf-gt-zero");
   }
 
@@ -282,7 +282,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
    * @notice Check that keyHash is not an empty bytes32 string
    * @param _keyHash Chainlink VRF keyHash
    */
-  function _requireKeyhash(bytes32 _keyHash) internal {
+  function _requireKeyhash(bytes32 _keyHash) internal pure {
     require(_keyHash != bytes32(0), "RNGChainLink/keyHash-not-empty");
   }
 }
