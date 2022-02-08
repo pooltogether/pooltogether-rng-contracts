@@ -12,14 +12,14 @@ interface RNGInterface {
    * @param requestId The indexed ID of the request used to get the results of the RNG service
    * @param sender The indexed address of the sender of the request
    */
-  event RandomNumberRequested(uint256 indexed requestId, address indexed sender);
+  event RandomNumberRequested(uint32 indexed requestId, address indexed sender);
 
   /**
    * @notice Emitted when an existing request for a random number has been completed
    * @param requestId The indexed ID of the request used to get the results of the RNG service
    * @param randomNumber The random number produced by the 3rd-party service
    */
-  event RandomNumberCompleted(uint256 indexed requestId, uint256 randomNumber);
+  event RandomNumberCompleted(uint32 indexed requestId, uint256 randomNumber);
 
   /**
    * @notice Gets the last request id used by the RNG service
