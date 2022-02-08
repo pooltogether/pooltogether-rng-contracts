@@ -7,7 +7,7 @@
 
 The [PoolTogether](https://www.pooltogether.com/) Prize Savings Protocol Ethereum smart contracts.
 
-See the [documentation](https://docs.pooltogether.com/protocol/random-number-generator)
+See the [documentation](https://v4.docs.pooltogether.com)
 
 # Deployments
 
@@ -37,12 +37,12 @@ Now enable the env vars using [direnv](https://direnv.net/docs/installation.html
 $ direnv allow
 ```
 
-# Interacting using Buidler Console
+# Interacting using Hardhat Console
 
 You can interact with the contract using the buidler console:
 
 ```sh
-$ buidler console --network [network]
+$ npx hardhat console --network [network]
 ```
 
 Then you can interact with deployed contracts:
@@ -111,5 +111,3 @@ $ yarn start
 ```
 
 Deploy to an Ethereum Network
-
-
