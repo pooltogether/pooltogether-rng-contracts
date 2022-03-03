@@ -7,20 +7,14 @@ import "../RNGChainlinkV2.sol";
 contract RNGChainlinkV2Harness is RNGChainlinkV2 {
   constructor(
     address _owner,
-    address vrfCoordinator_,
-    uint64 _subId,
-    uint32 _callbackGasLimit,
-    uint16 _requestConfirmations,
-    uint32 _numWords,
+    VRFCoordinatorV2Interface _vrfCoordinator,
+    uint64 _subscriptionId,
     bytes32 _keyHash
   )
     RNGChainlinkV2(
       _owner,
-      vrfCoordinator_,
-      _subId,
-      _callbackGasLimit,
-      _requestConfirmations,
-      _numWords,
+      _vrfCoordinator,
+      _subscriptionId,
       _keyHash
     )
   {}
@@ -28,8 +22,8 @@ contract RNGChainlinkV2Harness is RNGChainlinkV2 {
   function subscribe() external {
     address[] memory consumers = new address[](1);
     consumers[0] = address(this);
-    sRequestConfig.subId = _vrfCoordinator.createSubscription();
-    _vrfCoordinator.addConsumer(sRequestConfig.subId, consumers[0]);
+    subscriptionId = vrfCoordinator.createSubscription();
+    vrfCoordinator.addConsumer(subscriptionId, consumers[0]);
   }
 
   function setRequestCounter(uint32 _requestCounter) external {
