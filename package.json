@@ -14,7 +14,7 @@
     "compile": "hardhat --show-stack-traces --max-memory 8192 compile",
     "coverage": "HIDE_DEPLOY_LOG=true OPTIMIZER_DISABLED=true hardhat coverage",
     "coverage:file": "HIDE_DEPLOY_LOG=true OPTIMIZER_DISABLED=true hardhat coverage --testfiles",
-    "gas": "REPORT_GAS=true hardhat test --network local",
+    "gas": "REPORT_GAS=true hardhat test",
     "start": "DEBUG=* hardhat node",
     "deploy": "hardhat deploy --write true --network",
     "clean": "rm -rf build cache",

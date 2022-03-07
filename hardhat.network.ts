@@ -5,6 +5,9 @@ const mnemonic = process.env.HDWALLET_MNEMONIC;
 const polygonRPCUrl = process.env.POLYGON_MAINNET_RPC_URL;
 
 const networks: HardhatUserConfig['networks'] = {
+  hardhat: {
+    allowUnlimitedContractSize: true,
+  },
   coverage: {
     url: 'http://127.0.0.1:8555',
     blockGasLimit: 200000000,
