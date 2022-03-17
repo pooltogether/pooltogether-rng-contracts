@@ -17,10 +17,7 @@ const debug = require('debug')('ptv3:RNGChainlink.test');
 type deployParametersType = {
   deployerAddress: string;
   vrfCoordinatorAddress: string;
-  subId: number;
-  callbackGasLimit: number;
-  requestConfirmations: number;
-  numWords: number;
+  subscriptionId: number;
   keyHash: string;
 };
 
@@ -44,10 +41,7 @@ describe('RNGChainlinkV2 contract', function () {
   const deployRNGChainlinkV2 = async ({
     deployerAddress,
     vrfCoordinatorAddress,
-    subId,
-    callbackGasLimit,
-    requestConfirmations,
-    numWords,
+    subscriptionId,
     keyHash,
   }: deployParametersType) => {
     const RNGFactory = await getContractFactory('RNGChainlinkV2Harness', deployer);
@@ -55,10 +49,7 @@ describe('RNGChainlinkV2 contract', function () {
     return await RNGFactory.deploy(
       deployerAddress,
       vrfCoordinatorAddress,
-      subId,
-      callbackGasLimit,
-      requestConfirmations,
-      numWords,
+      subscriptionId,
       keyHash,
     );
   };
@@ -102,10 +93,7 @@ describe('RNGChainlinkV2 contract', function () {
     deployParameters = {
       deployerAddress: deployer.address,
       vrfCoordinatorAddress: vrfCoordinator.address,
-      subId: 1,
-      callbackGasLimit: 1000000, // Value for testing, should be 1000000 for mainnet
-      requestConfirmations: 3,
-      numWords: 1,
+      subscriptionId: 1,
       keyHash,
     };
 
@@ -131,31 +119,26 @@ describe('RNGChainlinkV2 contract', function () {
       const {
         deployerAddress,
         vrfCoordinatorAddress,
-        subId,
-        callbackGasLimit,
-        requestConfirmations,
-        numWords,
+        subscriptionId,
         keyHash,
       } = deployParameters;
 
-      const subscriptionRequestConfig = await rng.callStatic.sRequestConfig();
+      await expect(deployTransaction)
+        .to.emit(rng, 'KeyHashSet')
+        .withArgs(keyHash);
+
+      await expect(deployTransaction)
+        .to.emit(rng, 'SubscriptionIdSet')
+        .withArgs(subscriptionId);
 
       await expect(deployTransaction)
         .to.emit(rng, 'VrfCoordinatorSet')
         .withArgs(vrfCoordinatorAddress);
 
-      await expect(deployTransaction)
-        .to.emit(rng, 'RequestConfigSet')
-        .withArgs(subscriptionRequestConfig);
-
-      expect(await rng.callStatic.owner()).to.equal(deployerAddress);
-      expect(await rng.callStatic.getVrfCoordinator()).to.equal(vrfCoordinatorAddress);
-
-      expect(subscriptionRequestConfig.subId).to.equal(subId);
-      expect(subscriptionRequestConfig.callbackGasLimit).to.equal(callbackGasLimit);
-      expect(subscriptionRequestConfig.requestConfirmations).to.equal(requestConfirmations);
-      expect(subscriptionRequestConfig.numWords).to.equal(numWords);
-      expect(subscriptionRequestConfig.keyHash).to.equal(keyHash);
+      expect(await rng.owner()).to.equal(deployerAddress);
+      expect(await rng.getKeyHash()).to.equal(keyHash);
+      expect(await rng.getSubscriptionId()).to.equal(subscriptionId);
+      expect(await rng.getVrfCoordinator()).to.equal(vrfCoordinatorAddress);
     });
 
     it('should fail to deploy RNGChainlinkV2 if vrfCoordinator is address zero', async () => {
@@ -166,35 +149,11 @@ describe('RNGChainlinkV2 contract', function () {
       );
     });
 
-    it('should fail to deploy RNGChainlinkV2 if subId is not greater than zero', async () => {
-      deployParameters.subId = 0;
+    it('should fail to deploy RNGChainlinkV2 if subscriptionId is not greater than zero', async () => {
+      deployParameters.subscriptionId = 0;
 
       await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
         'RNGChainLink/subId-gt-zero',
-      );
-    });
-
-    it('should fail to deploy RNGChainlinkV2 if callbackGasLimit is not greater than zero', async () => {
-      deployParameters.callbackGasLimit = 0;
-
-      await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
-        'RNGChainLink/gas-limit-gt-zero',
-      );
-    });
-
-    it('should fail to deploy RNGChainlinkV2 if requestConfirmations is not greater than zero', async () => {
-      deployParameters.requestConfirmations = 0;
-
-      await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
-        'RNGChainLink/requestConf-gt-zero',
-      );
-    });
-
-    it('should fail to deploy RNGChainlinkV2 if numWords is not greater than zero', async () => {
-      deployParameters.numWords = 0;
-
-      await expect(deployRNGChainlinkV2(deployParameters)).to.be.revertedWith(
-        'RNGChainLink/numWords-gt-zero',
       );
     });
 
@@ -324,6 +283,12 @@ describe('RNGChainlinkV2 contract', function () {
     });
   });
 
+  describe('getKeyHash()', () => {
+    it('should get Chainlink VRF keyHash', async () => {
+      expect(await rng.getKeyHash()).to.equal(deployParameters.keyHash);
+    });
+  });
+
   describe('getSubscriptionId()', () => {
     it('should get Chainlink VRF subscription ID', async () => {
       expect(await rng.getSubscriptionId()).to.equal(1);
@@ -338,67 +303,21 @@ describe('RNGChainlinkV2 contract', function () {
 
   describe('setSubscriptionId()', () => {
     it('should succeed to set subscription id if owner', async () => {
-      const { subId } = deployParameters;
-      await expect(rng.setSubscriptionId(subId)).to.emit(rng, 'SubscriptionIdSet').withArgs(subId);
+      const { subscriptionId } = deployParameters;
+      await expect(rng.setSubscriptionId(subscriptionId)).to.emit(rng, 'SubscriptionIdSet').withArgs(subscriptionId);
     });
 
-    it('should fail to set subscription id if subId is not greater than zero', async () => {
-      deployParameters.subId = 0;
+    it('should fail to set subscription id if subscriptionId is not greater than zero', async () => {
+      deployParameters.subscriptionId = 0;
 
-      await expect(rng.setSubscriptionId(deployParameters.subId)).to.be.revertedWith(
+      await expect(rng.setSubscriptionId(deployParameters.subscriptionId)).to.be.revertedWith(
         'RNGChainLink/subId-gt-zero',
       );
     });
 
     it('should fail to set subscription id if not owner', async () => {
       await expect(
-        rng.connect(stranger).setSubscriptionId(deployParameters.subId),
-      ).to.be.revertedWith('Ownable/caller-not-owner');
-    });
-  });
-
-  describe('setCallbackGasLimit()', () => {
-    it('should succeed to set callbackGasLimit if owner', async () => {
-      const { callbackGasLimit } = deployParameters;
-      await expect(rng.setCallbackGasLimit(callbackGasLimit))
-        .to.emit(rng, 'CallbackGasLimitSet')
-        .withArgs(callbackGasLimit);
-    });
-
-    it('should fail to set callbackGasLimit if callbackGasLimit is not greater than zero', async () => {
-      deployParameters.callbackGasLimit = 0;
-
-      await expect(rng.setCallbackGasLimit(deployParameters.callbackGasLimit)).to.be.revertedWith(
-        'RNGChainLink/gas-limit-gt-zero',
-      );
-    });
-
-    it('should fail to set callbackGasLimit if not owner', async () => {
-      await expect(
-        rng.connect(stranger).setCallbackGasLimit(deployParameters.callbackGasLimit),
-      ).to.be.revertedWith('Ownable/caller-not-owner');
-    });
-  });
-
-  describe('setRequestConfirmations()', () => {
-    it('should succeed to set requestConfirmations if owner', async () => {
-      const { requestConfirmations } = deployParameters;
-      await expect(rng.setRequestConfirmations(requestConfirmations))
-        .to.emit(rng, 'RequestConfirmationsSet')
-        .withArgs(requestConfirmations);
-    });
-
-    it('should fail to set requestConfirmations if requestConfirmations is not greater than zero', async () => {
-      deployParameters.requestConfirmations = 0;
-
-      await expect(
-        rng.setRequestConfirmations(deployParameters.requestConfirmations),
-      ).to.be.revertedWith('RNGChainLink/requestConf-gt-zero');
-    });
-
-    it('should fail to set requestConfirmations if not owner', async () => {
-      await expect(
-        rng.connect(stranger).setRequestConfirmations(deployParameters.requestConfirmations),
+        rng.connect(stranger).setSubscriptionId(deployParameters.subscriptionId),
       ).to.be.revertedWith('Ownable/caller-not-owner');
     });
   });
