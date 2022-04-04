@@ -1,7 +1,7 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
   "main": "index.js",
@@ -29,7 +29,7 @@
     "@pooltogether/owner-manager-contracts": "1.1.0"
   },
   "devDependencies": {
-    "@chainlink/contracts": "0.3.1",
+    "@chainlink/contracts": "0.4.0",
     "@chainlink/test-helpers": "0.0.6",
     "@nomiclabs/hardhat-ethers": "2.0.4",
     "@nomiclabs/hardhat-etherscan": "3.0.0",
