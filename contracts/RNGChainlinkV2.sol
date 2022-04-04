@@ -3,7 +3,7 @@
 pragma solidity 0.8.6;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@pooltogether/owner-manager-contracts/contracts/Manageable.sol";
 
 import "./RNGChainlinkV2Interface.sol";
