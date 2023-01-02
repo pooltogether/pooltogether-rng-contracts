@@ -1,7 +1,7 @@
 {
   "name": "@pooltogether/pooltogether-rng-contracts",
   "author": "PoolTogether, Inc.",
-  "version": "1.5.2-beta.1",
+  "version": "1.5.2",
   "description": "PoolTogether RNG Service Smart Contracts",
   "license": "GPL-3.0",
   "main": "index.js",
@@ -17,11 +17,11 @@
     "gas": "REPORT_GAS=true hardhat test",
     "start": "DEBUG=* hardhat node",
     "deploy": "hardhat deploy --write true --network",
-    "clean": "rm -rf build cache",
+    "clean": "rm -rf artifacts cache",
     "clean-test": "rm -rf deployments/hardhatevm_31337 test-results.xml",
     "format": "prettier --config .prettierrc --write \"**/*.*.{ts,js}\" \"contracts/**/*.sol\"",
     "format:file": "prettier --config .prettierrc --write",
-    "prepack": "rm -rf build cache && hardhat compile",
+    "prepack": "rm -rf artifacts cache && hardhat compile",
     "etherscan-verify": "hardhat etherscan-verify --solc-input --api-key $ETHERSCAN_API_KEY --network",
     "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
   },
